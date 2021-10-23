@@ -20,10 +20,14 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   std::optional<std::string> init() override;
   void render() override;
 
+  void setLightDir(const glm::vec3 &lightDir);
+
  private:
   Chunk chunk;
   std::filesystem::path shaderDir;
   std::shared_ptr<Camera> camera;
+
+  glm::vec3 lightDir;
 
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;

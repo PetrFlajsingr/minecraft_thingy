@@ -8,6 +8,7 @@
 
 pf::mc::Chunk::Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
                                                                                  vbo(std::make_shared<Buffer>()),
+                                                                                 nbo(std::make_shared<Buffer>()),
                                                                                  vao(std::make_shared<VertexArray>()),
                                                                                  position(position) {
   generateVoxelData(noiseGenerator);
@@ -19,14 +20,16 @@ void pf::mc::Chunk::update() {
   }
   log("updating chunk at {}x{}x{}", position.x, position.y, position.z);
   changed = false;
-  const auto vertices = generateVertices();
-  vertexCount = vertices.size();
+  const auto data = generateGeometry();
+  vertexCount = data.vertices.size();
   log("generated {} vertices", vertexCount);
   if (vertexCount == 0) {
     return;
   }
-  vbo->alloc(vertexCount * sizeof(Voxel::Vertex), vertices.data(), GL_STATIC_DRAW);
+  vbo->alloc(vertexCount * sizeof(Voxel::Vertex), data.vertices.data(), GL_STATIC_DRAW);
+  nbo->alloc(data.normals.size() * sizeof(glm::vec3), data.normals.data(), GL_STATIC_DRAW);
   vao->addAttrib(vbo, 0, 4, GL_BYTE, 4 * sizeof(std::uint8_t));
+  vao->addAttrib(nbo, 1, 3, GL_FLOAT, 3 * sizeof(float));
 }
 
 void pf::mc::Chunk::render() {
@@ -67,10 +70,10 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
   }
 }
 
-std::vector<pf::mc::Voxel::Vertex> pf::mc::Chunk::generateVertices() const {
-  auto result = std::vector<Voxel::Vertex>{};
-  result.reserve(CHUNK_SIZE * 3);// kinda random number
-  // TODO: change this to single index
+pf::mc::Chunk::GeometryData pf::mc::Chunk::generateGeometry() const {
+  auto result = GeometryData{};
+  result.vertices.reserve(CHUNK_SIZE * 3);// kinda random number
+  result.normals.reserve(CHUNK_SIZE);// kinda random number
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
@@ -81,57 +84,93 @@ std::vector<pf::mc::Voxel::Vertex> pf::mc::Chunk::generateVertices() const {
         }
         // -X
         if (x == 0 || !isVoxelFilled(x - 1, y, z)) {
-          result.emplace_back(x, y, z, voxel.type);
-          result.emplace_back(x, y, z + 1, voxel.type);
-          result.emplace_back(x, y + 1, z, voxel.type);
-          result.emplace_back(x, y + 1, z, voxel.type);
-          result.emplace_back(x, y, z + 1, voxel.type);
-          result.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.vertices.emplace_back(x, y, z, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
+          result.vertices.emplace_back(x, y, z + 1, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
+          result.vertices.emplace_back(x, y + 1, z, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
+          result.vertices.emplace_back(x, y + 1, z, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
+          result.vertices.emplace_back(x, y, z + 1, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
+          result.vertices.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(-1, 0, 0);
         }
         // +x
         if (x == CHUNK_LEN - 1 || !isVoxelFilled(x + 1, y, z)) {
-          result.emplace_back(x + 1, y, z, voxel.type);
-          result.emplace_back(x + 1, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y, z + 1, voxel.type);
-          result.emplace_back(x + 1, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
-          result.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.vertices.emplace_back(x + 1, y, z, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
+          result.vertices.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
+          result.vertices.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.normals.emplace_back(1, 0, 0);
         }
         // -y
         if (y == 0 || !isVoxelFilled(x, y - 1, z)) {
-          result.emplace_back(x, y, z, voxel.type);
-          result.emplace_back(x + 1, y, z, voxel.type);
-          result.emplace_back(x, y, z + 1, voxel.type);
-          result.emplace_back(x + 1, y, z, voxel.type);
-          result.emplace_back(x + 1, y, z + 1, voxel.type);
-          result.emplace_back(x, y, z + 1, voxel.type);
+          result.vertices.emplace_back(x, y, z, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
+          result.vertices.emplace_back(x + 1, y, z, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
+          result.vertices.emplace_back(x, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
+          result.vertices.emplace_back(x + 1, y, z, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
+          result.vertices.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
+          result.vertices.emplace_back(x, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, -1, 0);
         }
         // +y
         if (y == CHUNK_LEN - 1 || !isVoxelFilled(x, y + 1, z)) {
-          result.emplace_back(x, y + 1, z, voxel.type);
-          result.emplace_back(x, y + 1, z + 1, voxel.type);
-          result.emplace_back(x + 1, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y + 1, z, voxel.type);
-          result.emplace_back(x, y + 1, z + 1, voxel.type);
-          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.vertices.emplace_back(x, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
+          result.vertices.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
+          result.vertices.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
+          result.vertices.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 1, 0);
         }
         // -z
         if (z == 0 || !isVoxelFilled(x, y, z - 1)) {
-          result.emplace_back(x, y, z, voxel.type);
-          result.emplace_back(x, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y, z, voxel.type);
-          result.emplace_back(x, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y + 1, z, voxel.type);
-          result.emplace_back(x + 1, y, z, voxel.type);
+          result.vertices.emplace_back(x, y, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
+          result.vertices.emplace_back(x, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
+          result.vertices.emplace_back(x + 1, y, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
+          result.vertices.emplace_back(x, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
+          result.vertices.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
+          result.vertices.emplace_back(x + 1, y, z, voxel.type);
+          result.normals.emplace_back(0, 0, -1);
         }
         // +z
         if (z == CHUNK_LEN - 1 || !isVoxelFilled(x, y, z + 1)) {
-          result.emplace_back(x, y, z + 1, voxel.type);
-          result.emplace_back(x + 1, y, z + 1, voxel.type);
-          result.emplace_back(x, y + 1, z + 1, voxel.type);
-          result.emplace_back(x, y + 1, z + 1, voxel.type);
-          result.emplace_back(x + 1, y, z + 1, voxel.type);
-          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.vertices.emplace_back(x, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
+          result.vertices.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
+          result.vertices.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
+          result.vertices.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
+          result.vertices.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
+          result.vertices.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.normals.emplace_back(0, 0, 1);
         }
       }
     }

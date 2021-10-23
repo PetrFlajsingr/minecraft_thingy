@@ -31,6 +31,8 @@ struct UI {
       pf::ui::ig::Button *moveToOriginButton;
   pf::ui::ig::Window *logWindow;
     pf::ui::ig::Memo *logMemo;
+  pf::ui::ig::Window *lightingWindow;
+    pf::ui::ig::Slider<glm::vec3> *lightPosSlider;
 
   // clang-format on
 

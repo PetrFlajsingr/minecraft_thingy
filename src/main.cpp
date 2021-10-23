@@ -89,16 +89,21 @@ int main(int argc, char *argv[]) {
       }
     }
   });
-
-  ui.moveToOriginButton->addClickListener([&] {
-    camera->Position = {0.f, 0.f, 0.f};
-  });
-
   pf::mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders", camera};
   if (const auto initResult = renderer.init(); initResult.has_value()) {
     fmt::print(stderr, "Error during initialization: {}\n", initResult.value());
     return -1;
   }
+
+  ui.moveToOriginButton->addClickListener([&] {
+    camera->Position = {0.f, 0.f, 0.f};
+  });
+
+  ui.lightPosSlider->addValueListener([&](glm::vec3 pos) {
+    const auto normDir = glm::normalize(-pos);
+    renderer.setLightDir(normDir);
+  }, true);
+
 
   double lastFrameTime = 0.0;
   mainWindow.setMainLoop([&](double time) {

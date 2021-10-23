@@ -36,10 +36,15 @@ class Chunk {
 
   [[nodiscard]] static std::size_t index3Dto1D(std::size_t x, std::size_t y, std::size_t z);
 
-  [[nodiscard]] std::vector<Voxel::Vertex> generateVertices() const;
+  struct GeometryData {
+    std::vector<Voxel::Vertex> vertices;
+    std::vector<glm::vec3> normals;
+  };
+  [[nodiscard]] GeometryData generateGeometry() const;
 
   std::array<Voxel, CHUNK_SIZE> voxels{Voxel::Type::Empty};
   std::shared_ptr<Buffer> vbo;
+  std::shared_ptr<Buffer> nbo;
   std::shared_ptr<VertexArray> vao;
   std::size_t vertexCount = 0;
   glm::vec3 position;

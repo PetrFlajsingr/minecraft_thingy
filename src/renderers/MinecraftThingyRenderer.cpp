@@ -45,5 +45,10 @@ void pf::mc::MinecraftThingyRenderer::render() {
   const auto viewMatrix = camera->GetViewMatrix();
   const auto mvp = projectionMatrix * viewMatrix;
   program->setMatrix4fv("mvp", &mvp[0][0]);
+  program->setMatrix4fv("view", &viewMatrix[0][0]);
+  program->set3fv("lightDir", &lightDir[0]);
   chunk.render();
+}
+void pf::mc::MinecraftThingyRenderer::setLightDir(const glm::vec3 &lightDir) {
+  MinecraftThingyRenderer::lightDir = lightDir;
 }

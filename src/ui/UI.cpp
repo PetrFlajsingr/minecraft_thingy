@@ -6,7 +6,6 @@
 #include <pf_imgui/backends/ImGuiGlfwOpenGLInterface.h>
 #include <pf_imgui/styles/dark.h>
 
-
 using namespace pf::mc;
 
 UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
@@ -31,6 +30,9 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
   logMemo = &logWindow->createChild<Memo>("log_memo", "Log");
+
+  lightingWindow = &imguiInterface->createWindow("lighting_window", "Lighting");
+  lightPosSlider = &lightingWindow->createChild<Slider<glm::vec3>>("light_pos_slider", "Light pos", -1.0, 1.0, glm::vec3{0, 1, 0}, Persistent::Yes);
 
   imguiInterface->setStateFromConfig();
 }
