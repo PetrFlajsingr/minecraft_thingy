@@ -60,8 +60,8 @@ void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
-  constexpr auto HEIGHT_GRAVEL = 5;
-  constexpr auto HEIGHT_ICE = 8;
+  constexpr auto HEIGHT_GRAVEL = 15;
+  constexpr auto HEIGHT_ICE = 50;
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {

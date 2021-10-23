@@ -6,7 +6,6 @@
 #define MINECRAFT_THINGY_SRC_NOISE_PERLINNOISEGENERATOR_H
 
 #include "NoiseGenerator.h"
-#include <PerlinNoise/PerlinNoise.hpp>
 
 namespace pf::mc {
 class PerlinNoiseGenerator : public NoiseGenerator {
@@ -15,7 +14,7 @@ class PerlinNoiseGenerator : public NoiseGenerator {
   [[nodiscard]] double noise(glm::vec3 coord) const override;
 
  private:
-  siv::PerlinNoise generator;
+  float seed;
 };
 }
 
