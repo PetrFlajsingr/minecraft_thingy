@@ -1,11 +1,9 @@
 #version 460 core
 
-in vec4 texCoord;
+in vec4 fragCoord;
 in vec3 normal;
-in vec3 fragPos;
 
 out vec4 fragColor;
-// TODO:
 uniform vec3 lightDir;
 
 #define LIGHT_COLOR vec3(1, 1, 1)
@@ -21,7 +19,8 @@ void main() {
     const vec3 diffuse = diffuseV * LIGHT_COLOR;
 
 
-    const vec3 objectColor = vec3(texCoord.w / 128.0 + 0.5, texCoord.w / 256.0, texCoord.w / 512.0) + fragPos * 0.00001;
+
+    const vec3 objectColor = vec3(fragCoord.w / 128.0 + 0.5, fragCoord.w / 256.0, fragCoord.w / 512.0);
 
     fragColor = vec4(objectColor * (ambient + diffuse), 1.0);
 }
