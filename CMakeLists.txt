@@ -73,7 +73,7 @@ add_executable(minecraft_thingy
         src/noise/PerlinNoiseGenerator.h src/noise/PerlinNoiseGenerator.cpp src/log.h
         src/utils/Direction.h
         src/utils/FPSCounter.cpp
-        )
+        src/world/ChunkManager.cpp src/world/ChunkManager.h)
 
 
 target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog
@@ -85,10 +85,11 @@ if(WIN32)
             "${PROJECT_SOURCE_DIR}/dlls"
             $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_SOURCE_DIR}/config.toml"
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/config.toml)
+## disabled, because this erases any data saved by the UI
+#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#        "${PROJECT_SOURCE_DIR}/config.toml"
+#        $<TARGET_FILE_DIR:${PROJECT_NAME}>/config.toml)
 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

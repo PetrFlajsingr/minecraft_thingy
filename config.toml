@@ -3,6 +3,9 @@ width = 1800
 height = 1200
 title = "OpenGL"
 
+[chunks]
+max_limit = 32
+
 [files]
 resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
 
