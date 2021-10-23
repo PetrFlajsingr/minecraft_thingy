@@ -22,12 +22,16 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   void setLightDir(const glm::vec3 &lightDir);
 
+  void setWireframe(bool wireframe);
+
  private:
   Chunk chunk;
   std::filesystem::path shaderDir;
   std::shared_ptr<Camera> camera;
 
   glm::vec3 lightDir;
+
+  bool wireframe;
 
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;

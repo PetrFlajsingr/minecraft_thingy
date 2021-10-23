@@ -29,6 +29,7 @@ struct UI {
       pf::ui::ig::Text *camPosLabel;
       pf::ui::ig::Text *camDirLabel;
       pf::ui::ig::Button *moveToOriginButton;
+      pf::ui::ig::Checkbox *showWireframeCheckbox;
   pf::ui::ig::Window *logWindow;
     pf::ui::ig::Memo *logMemo;
   pf::ui::ig::Window *lightingWindow;

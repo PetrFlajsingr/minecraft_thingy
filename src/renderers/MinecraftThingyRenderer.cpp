@@ -40,6 +40,12 @@ void pf::mc::MinecraftThingyRenderer::render() {
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
+  if (wireframe) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  } else {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+
   program->use();
   const auto projectionMatrix = glm::perspective(glm::radians(90.0f), 4.0f / 3, 0.1f, 1000.f);
   const auto viewMatrix = camera->GetViewMatrix();
@@ -50,4 +56,7 @@ void pf::mc::MinecraftThingyRenderer::render() {
 }
 void pf::mc::MinecraftThingyRenderer::setLightDir(const glm::vec3 &lightDir) {
   MinecraftThingyRenderer::lightDir = lightDir;
+}
+void pf::mc::MinecraftThingyRenderer::setWireframe(bool wireframe) {
+  MinecraftThingyRenderer::wireframe = wireframe;
 }

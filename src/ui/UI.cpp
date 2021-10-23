@@ -27,6 +27,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   camPosLabel = &camWindowLayout->createChild<Text>("cam_pos_label", "Camera position: 0.0000x0.0000x0.0000");
   camDirLabel = &camWindowLayout->createChild<Text>("cam_dir_label", "Camera direction: 0.0000x0.0000x1.0000");
   moveToOriginButton = &camWindowLayout->createChild<Button>("move_origin_btn", "Move to origin");
+  showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe");
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
   logMemo = &logWindow->createChild<Memo>("log_memo", "Log");

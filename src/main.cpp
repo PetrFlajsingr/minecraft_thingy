@@ -104,6 +104,10 @@ int main(int argc, char *argv[]) {
     renderer.setLightDir(normDir);
   }, true);
 
+  ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
+    renderer.setWireframe(enabled);
+  });
+
 
   double lastFrameTime = 0.0;
   mainWindow.setMainLoop([&](double time) {
