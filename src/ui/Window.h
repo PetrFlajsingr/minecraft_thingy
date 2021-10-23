@@ -82,10 +82,10 @@ class Window {
     Window::mouseButtonUserCallback = mouseButtonUserCallback;
   }
   /**
-   * Called for each mouse move. Provides location of the mouse.
+   * Called for each mouse move. Provides location of the mouse and delta in x and y.
    * @param mouseMoveUserCallback
    */
-  void setMouseMoveCallback(std::invocable<double, double> auto &&mouseMoveUserCallback) {
+  void setMouseMoveCallback(std::invocable<double, double, double, double> auto &&mouseMoveUserCallback) {
     Window::mouseMoveUserCallback = mouseMoveUserCallback;
   }
   /**
@@ -125,7 +125,7 @@ class Window {
   std::function<void(MouseEventType, MouseButton, double, double)> mouseButtonUserCallback = [](auto, auto, auto, auto) {};
 
   static void mousePositionCallback(GLFWwindow *window, double xpos, double ypos);
-  std::function<void(double, double)> mouseMoveUserCallback = [](auto, auto) {};
+  std::function<void(double, double, double, double)> mouseMoveUserCallback = [](auto, auto, auto, auto) {};
 
   static void mouseWheelCallback(GLFWwindow *window, double xpos, double ypos);
   std::function<void(double, double)> mouseWheelUserCallback = [](auto, auto) {};
@@ -142,6 +142,9 @@ class Window {
   std::string title;
 
   bool closed = false;
+
+  std::optional<double> mousePosX = std::nullopt;
+  std::optional<double> mousePosY = std::nullopt;
 
   GLFWwindow *windowHandle = nullptr;
 };

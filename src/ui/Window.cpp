@@ -105,7 +105,17 @@ void pf::ogl::Window::mousePositionCallback(GLFWwindow *window, double xpos, dou
   if (self->inputIgnorePredicate()) {
     return;
   }
-  self->mouseMoveUserCallback(xpos, ypos);
+  if (!self->mousePosX.has_value()) {
+    self->mousePosX = xpos;
+  }
+  if (!self->mousePosY.has_value()) {
+    self->mousePosY = ypos;
+  }
+  const auto deltaX = xpos - *self->mousePosX;
+  const auto deltaY = ypos - *self->mousePosY;
+  self->mousePosX = xpos;
+  self->mousePosY = ypos;
+  self->mouseMoveUserCallback(xpos, ypos, deltaX, deltaY);
 }
 
 void pf::ogl::Window::mouseWheelCallback(GLFWwindow *window, double xpos, double ypos) {

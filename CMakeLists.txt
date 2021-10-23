@@ -19,7 +19,7 @@ HunterGate(
 )
 
 
-project(opengl_template)
+project(minecraft_thingy)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -57,22 +57,20 @@ add_library(glad src/glad.c)
 
 file(GLOB GEGL_SOURCES src/geGL/*.cpp src/geGL/private/*.cpp)
 
-add_executable(opengl_template
+add_executable(minecraft_thingy
         src/main.cpp
         src/ui/Window.cpp
         src/ui/Window.h
         src/utils/files.h
         src/utils/files.cpp
-        src/ui/DemoImGui.cpp
-        src/ui/DemoImGui.h
         ${pf_imgui_SOURCE_DIR}/src/pf_imgui/backends/ImGuiGlfwOpenGLInterface.cpp
         ${pf_imgui_SOURCE_DIR}/src/pf_imgui/backends/impl/imgui_impl_glfw.cpp
         ${pf_imgui_SOURCE_DIR}/src/pf_imgui/backends/impl/imgui_impl_opengl3.cpp
-        src/renderers/DemoRenderer.cpp src/renderers/DemoRenderer.h src/renderers/Renderer.h src/geGL/Shader.cpp src/geGL/Shader.h
-        ${GEGL_SOURCES})
+        src/renderers/Renderer.h src/geGL/Shader.cpp src/geGL/Shader.h
+        ${GEGL_SOURCES} include/Camera.h src/renderers/MinecraftThingyRenderer.cpp src/renderers/MinecraftThingyRenderer.h src/world/Chunk.cpp src/world/Chunk.h src/world/Voxel.h src/ui/UI.cpp src/ui/UI.h)
 
 
-target_link_libraries(opengl_template glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog
+target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog
         )
 
 if(WIN32)
@@ -88,14 +86,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_SOURCE_DIR}/src/shaders/simple_shader.frag"
-        "${PROJECT_SOURCE_DIR}/resources/shaders/simple_shader.frag")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_SOURCE_DIR}/src/shaders/simple_shader.vert"
-        "${PROJECT_SOURCE_DIR}/resources/shaders/simple_shader.vert")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/src/shaders"
+        "${PROJECT_SOURCE_DIR}/resources/shaders")
 
 
 #get_cmake_property(_variableNames VARIABLES)

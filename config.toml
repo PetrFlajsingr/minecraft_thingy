@@ -1,10 +1,10 @@
 [window]
-width = 1200
-height = 900
+width = 1800
+height = 1200
 title = "OpenGL"
 
 [files]
-resources_path = 'C:\Users\xflajs00\CLionProjects\opengl_template\resources'
+resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
 
 [imgui]
-path_icons = 'C:\Users\xflajs00\CLionProjects\opengl_template\resources\icons'
+path_icons = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources\icons'
