@@ -10,7 +10,8 @@ pf::mc::Chunk::Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator) :
                                                                                  vbo(std::make_shared<Buffer>()),
                                                                                  nbo(std::make_shared<Buffer>()),
                                                                                  vao(std::make_shared<VertexArray>()),
-                                                                                 position(position) {
+                                                                                 position(position),
+                                                                                 center(position + CHUNK_LEN / 2.0f) {
   generateVoxelData(noiseGenerator);
 }
 
@@ -79,7 +80,7 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
             voxels[index].type = Voxel::Type::Gravel;
             continue;
           }
-          if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y+1, z)) {
+          if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y + 1, z)) {
             if (y > HEIGHT_ICE) {
               voxels[index].type = Voxel::Type::Gravel;
             } else {
@@ -97,7 +98,7 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
 pf::mc::Chunk::GeometryData pf::mc::Chunk::generateGeometry() const {
   auto result = GeometryData{};
   result.vertices.reserve(CHUNK_SIZE * 3);// kinda random number
-  result.normals.reserve(CHUNK_SIZE);// kinda random number
+  result.normals.reserve(CHUNK_SIZE);     // kinda random number
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
@@ -211,4 +212,13 @@ bool pf::mc::Chunk::isVoxelFilled(std::size_t index) const {
 }
 void pf::mc::Chunk::setChanged() {
   changed = true;
+}
+const glm::vec3 &pf::mc::Chunk::getPosition() const {
+  return position;
+}
+const glm::vec3 &pf::mc::Chunk::getCenter() const {
+  return center;
+}
+pf::math::BoundingBox<3> pf::mc::Chunk::getAABB() const {
+  return {position, position + static_cast<float>(CHUNK_LEN)};
 }
