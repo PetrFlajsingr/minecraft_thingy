@@ -8,6 +8,7 @@
 #include <pf_imgui/ImGuiInterface.h>
 #include <pf_imgui/elements.h>
 #include <pf_imgui/layouts/layouts.h>
+#include <pf_imgui/elements/plots/SimplePlot.h>
 #include <GLFW/glfw3.h>
 
 namespace pf::mc {
@@ -22,22 +23,27 @@ struct UI {
   }
 
   // clang-format off
-  pf::ui::ig::AppMenuBar *appMenuBar;
-    pf::ui::ig::SubMenu *fileSubMenu;
-  pf::ui::ig::Window *cameraWindow;
-    pf::ui::ig::BoxLayout *camWindowLayout;
-      pf::ui::ig::Text *camPosLabel;
-      pf::ui::ig::Text *camDirLabel;
-      pf::ui::ig::Button *moveToOriginButton;
-      pf::ui::ig::Checkbox *showWireframeCheckbox;
-  pf::ui::ig::Window *logWindow;
-    pf::ui::ig::Memo *logMemo;
-  pf::ui::ig::Window *lightingWindow;
-    pf::ui::ig::Slider<glm::vec3> *lightPosSlider;
+  ui::ig::AppMenuBar *appMenuBar;
+    ui::ig::SubMenu *fileSubMenu;
+  ui::ig::Window *cameraWindow;
+    ui::ig::BoxLayout *camWindowLayout;
+      ui::ig::Text *camPosLabel;
+      ui::ig::Text *camDirLabel;
+      ui::ig::Button *moveToOriginButton;
+      ui::ig::Checkbox *showWireframeCheckbox;
+      ui::ig::Checkbox *clipCheckbox;
+  ui::ig::Window *logWindow;
+    ui::ig::Memo *logMemo;
+  ui::ig::Window *lightingWindow;
+    ui::ig::Slider<glm::vec3> *lightPosSlider;
+  ui::ig::Window *infoWindow;
+    ui::ig::SimplePlot *fpsCurrentPlot;
+    ui::ig::SimplePlot *fpsAveragePlot;
+    ui::ig::Text *fpsLabel;
 
   // clang-format on
 
-  std::unique_ptr<pf::ui::ig::ImGuiInterface> imguiInterface;
+  std::unique_ptr<ui::ig::ImGuiInterface> imguiInterface;
 };
 }
 #endif//MINECRAFT_THINGY_SRC_UI_UI_H

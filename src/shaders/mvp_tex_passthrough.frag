@@ -6,6 +6,8 @@ in vec3 normal;
 out vec4 fragColor;
 uniform vec3 lightDir;
 
+uniform sampler2D atlas;
+
 #define LIGHT_COLOR vec3(1, 1, 1)
 
 #define AMBIENT_STRENGTH 0.1
@@ -18,9 +20,16 @@ void main() {
     const float diffuseV = max(dot(normal, lightDir), 0.0);
     const vec3 diffuse = diffuseV * LIGHT_COLOR;
 
+    // no time
+    vec3 objectColor;
+    if (normal.x != 0) {
+        objectColor = texture2D(atlas, vec2((fract(fragCoord.z) + (fragCoord.w - 1.0)) / 4.0, fragCoord.y)).xyz;
+    } else if (normal.y != 0) {
+        objectColor = texture2D(atlas, vec2((fract(fragCoord.x) + (fragCoord.w - 1.0)) / 4.0, fragCoord.z)).xyz;
+    } else {
+        objectColor = texture2D(atlas, vec2((fract(fragCoord.x) + (fragCoord.w - 1.0)) / 4.0, fragCoord.y)).xyz;
+    }
 
-
-    const vec3 objectColor = vec3(fragCoord.w / 128.0 + 0.5, fragCoord.w / 256.0, fragCoord.w / 512.0);
 
     fragColor = vec4(objectColor * (ambient + diffuse), 1.0);
 }

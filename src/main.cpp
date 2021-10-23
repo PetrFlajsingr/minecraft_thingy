@@ -1,5 +1,6 @@
 #include "renderers/MinecraftThingyRenderer.h"
 #include "ui/UI.h"
+#include "utils/FPSCounter.h"
 #include "utils/files.h"
 #include <filesystem>
 #include <fmt/format.h>
@@ -48,8 +49,8 @@ int main(int argc, char *argv[]) {
   }
   auto ui = mc::UI{*config["imgui"].as_table(), mainWindow.getWindowHandle()};
   setLogger(
-      [&](std::string msg) {
-        fmt::print(msg);
+      [&](const std::string& msg) {
+        fmt::print(msg + "\n");
         ui.logMemo->addRecord(msg);
       });
 
@@ -77,11 +78,13 @@ int main(int argc, char *argv[]) {
         case 'A': dir = Camera_Movement::LEFT; break;
         case 'S': dir = Camera_Movement::BACKWARD; break;
         case 'D': dir = Camera_Movement::RIGHT; break;
+        case 'Q': dir = Camera_Movement::UP; break;
+        case 'E': dir = Camera_Movement::DOWN; break;
         default: break;
       }
       if (dir.has_value()) {
         if (mods.is(ModifierKey::Shift)) {
-          camera->ProcessKeyboard(dir.value(), frameTime * 10);
+          camera->ProcessKeyboard(dir.value(), frameTime * 100);
         } else {
           camera->ProcessKeyboard(dir.value(), frameTime);
         }
@@ -89,7 +92,7 @@ int main(int argc, char *argv[]) {
       }
     }
   });
-  pf::mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders", camera};
+  pf::mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders", resourcesFolder / "textures", camera};
   if (const auto initResult = renderer.init(); initResult.has_value()) {
     fmt::print(stderr, "Error during initialization: {}\n", initResult.value());
     return -1;
@@ -102,18 +105,22 @@ int main(int argc, char *argv[]) {
   ui.lightPosSlider->addValueListener([&](glm::vec3 pos) {
     const auto normDir = glm::normalize(-pos);
     renderer.setLightDir(normDir);
-  }, true);
-
+  },
+                                      true);
   ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
     renderer.setWireframe(enabled);
   });
 
-
   double lastFrameTime = 0.0;
+  FPSCounter fpsCounter{};
   mainWindow.setMainLoop([&](double time) {
     frameTime = time - lastFrameTime;
     lastFrameTime = time;
     renderer.render();
+    fpsCounter.onFrame();
+    ui.fpsAveragePlot->addValue(fpsCounter.averageFPS());
+    ui.fpsCurrentPlot->addValue(fpsCounter.currentFPS());
+    ui.fpsLabel->setText("Average FPS: {}", fpsCounter.averageFPS());
     ui.imguiInterface->render();
   });
 

@@ -12,7 +12,7 @@ namespace pf::mc {
 
 struct alignas(1) Voxel {
   enum class Type : std::uint8_t {
-    Empty = 0, Gravel = 1, Dirt = 2, Grass = 3, Ice = 4
+    Empty = 0, Grass = 1, Gravel = 2, Dirt = 3, Ice = 4
   };
   Type type;
 

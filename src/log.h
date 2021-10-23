@@ -8,15 +8,16 @@
 #include <functional>
 
 namespace details {
-inline std::function<void(std::string)> log = [](auto){};
+inline std::function<void(std::string)> log = [](auto) {};
 }
 
 inline void setLogger(std::invocable<std::string> auto &&logger) {
   details::log = logger;
 }
 
-void log(std::string_view msg, auto ...args) {
-  details::log(fmt::format(msg, std::forward<decltype(args)>(args)...));
+template<typename... Args>
+void log(std::string_view msg, Args &&...args) {
+  details::log(fmt::format(msg, std::forward<Args>(args)...));
 }
 
 #endif//MINECRAFT_THINGY_SRC_LOG_H

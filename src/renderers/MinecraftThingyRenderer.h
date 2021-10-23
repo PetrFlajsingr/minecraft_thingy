@@ -10,12 +10,13 @@
 #include <world/Chunk.h>
 #include <filesystem>
 #include <memory>
+#include <geGL/Texture.h>
 
 namespace pf::mc {
 
 class MinecraftThingyRenderer : public ogl::Renderer {
  public:
-  MinecraftThingyRenderer(std::filesystem::path shaderDir, std::shared_ptr<Camera> camera);
+  MinecraftThingyRenderer(std::filesystem::path shaderDir, const std::filesystem::path& textureDir, std::shared_ptr<Camera> camera);
 
   std::optional<std::string> init() override;
   void render() override;
@@ -28,10 +29,11 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   Chunk chunk;
   std::filesystem::path shaderDir;
   std::shared_ptr<Camera> camera;
+  std::shared_ptr<Texture> blockTextureAtlas;
 
   glm::vec3 lightDir;
 
-  bool wireframe;
+  bool wireframe = false;
 
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;

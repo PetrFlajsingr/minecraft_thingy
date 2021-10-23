@@ -116,6 +116,12 @@ class Window {
   void setInputIgnorePredicate(std::predicate auto &&predicate) {
     inputIgnorePredicate = predicate;
   }
+  /**
+   * Enqueue task to be run at the end of current loop.
+   */
+  void enqueueTask(std::invocable auto &&task) {
+    tasks.emplace_back(std::forward<decltype(task)>(task));
+  }
 
  private:
   static void windowSizeCallback(GLFWwindow *window, int width, int height);
@@ -147,6 +153,8 @@ class Window {
   std::optional<double> mousePosY = std::nullopt;
 
   GLFWwindow *windowHandle = nullptr;
+
+  std::vector<std::function<void()>> tasks{};
 };
 
 namespace details {

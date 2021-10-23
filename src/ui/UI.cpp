@@ -27,13 +27,23 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   camPosLabel = &camWindowLayout->createChild<Text>("cam_pos_label", "Camera position: 0.0000x0.0000x0.0000");
   camDirLabel = &camWindowLayout->createChild<Text>("cam_dir_label", "Camera direction: 0.0000x0.0000x1.0000");
   moveToOriginButton = &camWindowLayout->createChild<Button>("move_origin_btn", "Move to origin");
-  showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe");
+  showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe", false, Persistent::Yes);
+  clipCheckbox = &camWindowLayout->createChild<Checkbox>("clip_checkbox", "Clip - not implemented", true, Persistent::Yes);
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
   logMemo = &logWindow->createChild<Memo>("log_memo", "Log");
 
   lightingWindow = &imguiInterface->createWindow("lighting_window", "Lighting");
   lightPosSlider = &lightingWindow->createChild<Slider<glm::vec3>>("light_pos_slider", "Light pos", -1.0, 1.0, glm::vec3{0, 1, 0}, Persistent::Yes);
+
+  infoWindow = &imguiInterface->createWindow("info_window", "Info");
+  fpsCurrentPlot = &infoWindow->createChild<SimplePlot>("fps_plot", "Fps current", PlotType::Lines,
+                                                        std::vector<float>{}, std::nullopt, 200, 0, FLT_MAX,
+                                                        Size{Width::Auto(), 30});
+  fpsAveragePlot = &infoWindow->createChild<SimplePlot>("fps_avg_plot", "Fps average", PlotType::Lines,
+                                                        std::vector<float>{}, std::nullopt, 200, 0, FLT_MAX,
+                                                        Size{Width::Auto(), 30});
+  fpsLabel = &infoWindow->createChild<Text>("fps_label", "Average FPS: {}");
 
   imguiInterface->setStateFromConfig();
 }

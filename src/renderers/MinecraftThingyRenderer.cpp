@@ -9,11 +9,27 @@
 #include <noise/PerlinNoiseGenerator.h>
 #include <utility>
 #include <utils/files.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
-pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir,
+pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir, const std::filesystem::path& textureDir,
                                                          std::shared_ptr<Camera> camera) : chunk(glm::vec3{0, 0, 0}, mc::PerlinNoiseGenerator{}),
                                                                                            shaderDir(std::move(shaderDir)),
-                                                                                           camera(std::move(camera)) {
+                                                                                           camera(std::move(camera))
+                                                                                           {
+  int width;
+  int height;
+  int channels;
+  auto stbImgDeleter = [] (stbi_uc *ptr) {
+    stbi_image_free(ptr);
+  };
+  std::unique_ptr<stbi_uc, decltype(stbImgDeleter)> stbImage(stbi_load((textureDir / "blocks.png").string().c_str(), &width, &height, &channels, 0), stbImgDeleter);
+  blockTextureAtlas = std::make_shared<Texture>(GL_TEXTURE_2D, GL_RGBA, 0, width, height);
+  blockTextureAtlas->texParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
+  blockTextureAtlas->texParameteri(GL_TEXTURE_WRAP_T, GL_REPEAT);
+  blockTextureAtlas->texParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  blockTextureAtlas->texParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  blockTextureAtlas->setData2D(stbImage.get());
 }
 
 std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
@@ -52,6 +68,7 @@ void pf::mc::MinecraftThingyRenderer::render() {
   const auto mvp = projectionMatrix * viewMatrix;
   program->setMatrix4fv("mvp", &mvp[0][0]);
   program->set3fv("lightDir", &lightDir[0]);
+  blockTextureAtlas->bind(0);
   chunk.render();
 }
 void pf::mc::MinecraftThingyRenderer::setLightDir(const glm::vec3 &lightDir) {

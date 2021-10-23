@@ -59,12 +59,36 @@ void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
+  constexpr auto HEIGHT_GRAVEL = 5;
+  constexpr auto HEIGHT_ICE = 8;
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
         const auto index = index3Dto1D(x, y, z);
         const auto noiseValue = noiseGenerator.noise(position + glm::vec3{x, y, z});
         voxels[index].type = noiseValue > 0.0 ? Voxel::Type::Gravel : Voxel::Type::Empty;
+      }
+    }
+  }
+  for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
+    for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
+      for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
+        const auto index = index3Dto1D(x, y, z);
+        if (voxels[index].type != Voxel::Type::Empty) {
+          if (y < HEIGHT_GRAVEL) {
+            voxels[index].type = Voxel::Type::Gravel;
+            continue;
+          }
+          if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y+1, z)) {
+            if (y > HEIGHT_ICE) {
+              voxels[index].type = Voxel::Type::Gravel;
+            } else {
+              voxels[index].type = Voxel::Type::Grass;
+            }
+            continue;
+          }
+          voxels[index].type = Voxel::Type::Dirt;
+        }
       }
     }
   }

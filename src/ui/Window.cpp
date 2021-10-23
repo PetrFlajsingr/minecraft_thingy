@@ -65,6 +65,10 @@ void pf::ogl::Window::show() {
     mainLoop(timeElapsed);
     glfwSwapBuffers(windowHandle);
     glfwPollEvents();
+    for (const auto &task : tasks) {
+      task();
+    }
+    tasks.clear();
   }
 }
 
