@@ -6,15 +6,17 @@
 #include <geGL/Program.h>
 #include <geGL/Shader.h>
 #include <glad/glad.h>
+#include <noise/PerlinNoiseGenerator.h>
+#include <utility>
 #include <utils/files.h>
 
-#include <utility>
-
-pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir, std::shared_ptr<Camera> camera) : shaderDir(std::move(shaderDir)), camera(std::move(camera)) {
+pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir,
+                                                         std::shared_ptr<Camera> camera) : chunk(glm::vec3{0, 0, 0}, mc::PerlinNoiseGenerator{}),
+                                                                                           shaderDir(std::move(shaderDir)),
+                                                                                           camera(std::move(camera)) {
 }
 
 std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
-  chunk.setVoxel(0, 0, 0, Voxel::Type::Gravel);
 
   const auto vertexShaderSrc = readFile(shaderDir / "mvp_tex_passthrough.vert");
   if (!vertexShaderSrc.has_value()) {
@@ -35,8 +37,8 @@ std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
 void pf::mc::MinecraftThingyRenderer::render() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  //glEnable(GL_CULL_FACE);
-  //glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
 
   program->use();
   const auto projectionMatrix = glm::perspective(glm::radians(90.0f), 4.0f / 3, 0.1f, 1000.f);

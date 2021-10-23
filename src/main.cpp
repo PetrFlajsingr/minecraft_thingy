@@ -3,6 +3,7 @@
 #include "utils/files.h"
 #include <filesystem>
 #include <fmt/format.h>
+#include <log.h>
 #include <magic_enum.hpp>
 #include <toml++/toml.h>
 #include <ui/Window.h>
@@ -46,12 +47,17 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   auto ui = mc::UI{*config["imgui"].as_table(), mainWindow.getWindowHandle()};
+  setLogger(
+      [&](std::string msg) {
+        fmt::print(msg);
+        ui.logMemo->addRecord(msg);
+      });
 
   mainWindow.setInputIgnorePredicate([&] { return ui.imguiInterface->isWindowHovered() || ui.imguiInterface->isKeyboardCaptured(); });
 
   auto camera = std::make_shared<Camera>();
   bool cameraMoveEnabled = false;
-  double frameTime = 0.0; // hack
+  double frameTime = 0.0;// hack
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
     if (button == MouseButton::Right) {
       cameraMoveEnabled = type == MouseEventType::Down;

@@ -3,17 +3,25 @@
 //
 
 #include "Chunk.h"
+#include <fmt/core.h>
+#include <log.h>
 
-pf::mc::Chunk::Chunk() : changed(true), vbo(std::make_shared<Buffer>()), vao(std::make_shared<VertexArray>()) {
+pf::mc::Chunk::Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
+                                                                                 vbo(std::make_shared<Buffer>()),
+                                                                                 vao(std::make_shared<VertexArray>()),
+                                                                                 position(position) {
+  generateVoxelData(noiseGenerator);
 }
 
 void pf::mc::Chunk::update() {
   if (!changed) {
     return;
   }
+  log("updating chunk at {}x{}x{}", position.x, position.y, position.z);
   changed = false;
   const auto vertices = generateVertices();
   vertexCount = vertices.size();
+  log("generated {} vertices", vertexCount);
   if (vertexCount == 0) {
     return;
   }
@@ -47,6 +55,18 @@ void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc
   voxels[voxelIndex].type = type;
 }
 
+void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
+  for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
+    for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
+      for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
+        const auto index = index3Dto1D(x, y, z);
+        const auto noiseValue = noiseGenerator.noise(position + glm::vec3{x, y, z});
+        voxels[index].type = noiseValue > 0.0 ? Voxel::Type::Gravel : Voxel::Type::Empty;
+      }
+    }
+  }
+}
+
 std::vector<pf::mc::Voxel::Vertex> pf::mc::Chunk::generateVertices() const {
   auto result = std::vector<Voxel::Vertex>{};
   result.reserve(CHUNK_SIZE * 3);// kinda random number
@@ -60,49 +80,72 @@ std::vector<pf::mc::Voxel::Vertex> pf::mc::Chunk::generateVertices() const {
           continue;
         }
         // -X
-        result.emplace_back(x, y, z, voxel.type);
-        result.emplace_back(x, y, z + 1, voxel.type);
-        result.emplace_back(x, y + 1, z, voxel.type);
-        result.emplace_back(x, y + 1, z, voxel.type);
-        result.emplace_back(x, y, z + 1, voxel.type);
-        result.emplace_back(x, y + 1, z + 1, voxel.type);
+        if (x == 0 || !isVoxelFilled(x - 1, y, z)) {
+          result.emplace_back(x, y, z, voxel.type);
+          result.emplace_back(x, y, z + 1, voxel.type);
+          result.emplace_back(x, y + 1, z, voxel.type);
+          result.emplace_back(x, y + 1, z, voxel.type);
+          result.emplace_back(x, y, z + 1, voxel.type);
+          result.emplace_back(x, y + 1, z + 1, voxel.type);
+        }
         // +x
-        result.emplace_back(x + 1, y, z, voxel.type);
-        result.emplace_back(x + 1, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y, z + 1, voxel.type);
-        result.emplace_back(x + 1, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
-        result.emplace_back(x + 1, y, z + 1, voxel.type);
+        if (x == CHUNK_LEN - 1 || !isVoxelFilled(x + 1, y, z)) {
+          result.emplace_back(x + 1, y, z, voxel.type);
+          result.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+          result.emplace_back(x + 1, y, z + 1, voxel.type);
+        }
         // -y
-        result.emplace_back(x, y, z, voxel.type);
-        result.emplace_back(x + 1, y, z, voxel.type);
-        result.emplace_back(x, y, z + 1, voxel.type);
-        result.emplace_back(x + 1, y, z, voxel.type);
-        result.emplace_back(x + 1, y, z + 1, voxel.type);
-        result.emplace_back(x, y, z + 1, voxel.type);
+        if (y == 0 || !isVoxelFilled(x, y - 1, z)) {
+          result.emplace_back(x, y, z, voxel.type);
+          result.emplace_back(x + 1, y, z, voxel.type);
+          result.emplace_back(x, y, z + 1, voxel.type);
+          result.emplace_back(x + 1, y, z, voxel.type);
+          result.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.emplace_back(x, y, z + 1, voxel.type);
+        }
         // +y
-        result.emplace_back(x, y + 1, z, voxel.type);
-        result.emplace_back(x, y + 1, z + 1, voxel.type);
-        result.emplace_back(x + 1, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y + 1, z, voxel.type);
-        result.emplace_back(x, y + 1, z + 1, voxel.type);
-        result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+        if (y == CHUNK_LEN - 1 || !isVoxelFilled(x, y + 1, z)) {
+          result.emplace_back(x, y + 1, z, voxel.type);
+          result.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+        }
         // -z
-        result.emplace_back(x, y, z, voxel.type);
-        result.emplace_back(x, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y, z, voxel.type);
-        result.emplace_back(x, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y + 1, z, voxel.type);
-        result.emplace_back(x + 1, y, z, voxel.type);
+        if (z == 0 || !isVoxelFilled(x, y, z - 1)) {
+          result.emplace_back(x, y, z, voxel.type);
+          result.emplace_back(x, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y, z, voxel.type);
+          result.emplace_back(x, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y + 1, z, voxel.type);
+          result.emplace_back(x + 1, y, z, voxel.type);
+        }
         // +z
-        result.emplace_back(x, y, z + 1, voxel.type);
-        result.emplace_back(x + 1, y, z + 1, voxel.type);
-        result.emplace_back(x, y + 1, z + 1, voxel.type);
-        result.emplace_back(x, y + 1, z + 1, voxel.type);
-        result.emplace_back(x + 1, y, z + 1, voxel.type);
-        result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+        if (z == CHUNK_LEN - 1 || !isVoxelFilled(x, y, z + 1)) {
+          result.emplace_back(x, y, z + 1, voxel.type);
+          result.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.emplace_back(x, y + 1, z + 1, voxel.type);
+          result.emplace_back(x + 1, y, z + 1, voxel.type);
+          result.emplace_back(x + 1, y + 1, z + 1, voxel.type);
+        }
       }
     }
   }
   return result;
+}
+
+bool pf::mc::Chunk::isVoxelFilled(std::size_t x, std::size_t y, std::size_t z) const {
+  return isVoxelFilled(index3Dto1D(x, y, z));
+}
+
+bool pf::mc::Chunk::isVoxelFilled(std::size_t index) const {
+  return voxels[index].type != Voxel::Type::Empty;
+}
+void pf::mc::Chunk::setChanged() {
+  changed = true;
 }

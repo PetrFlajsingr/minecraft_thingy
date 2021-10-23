@@ -8,6 +8,7 @@
 #include <geGL/Buffer.h>
 #include <geGL/VertexArray.h>
 #include <array>
+#include <noise/NoiseGenerator.h>
 #include "Voxel.h"
 
 namespace pf::mc {
@@ -17,7 +18,9 @@ constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 
 class Chunk {
  public:
-  Chunk();
+  Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator);
+
+  void setChanged();
 
   void update();
   void render();
@@ -25,7 +28,12 @@ class Chunk {
   [[nodiscard]] Voxel getVoxel(std::size_t x, std::size_t y, std::size_t z) const;
   void setVoxel(std::size_t x, std::size_t y, std::size_t z, Voxel::Type type);
 
+  [[nodiscard]] bool isVoxelFilled(std::size_t x, std::size_t y, std::size_t z) const;
+  [[nodiscard]] bool isVoxelFilled(std::size_t index) const;
+
  private:
+  void generateVoxelData(const NoiseGenerator &noiseGenerator);
+
   [[nodiscard]] static std::size_t index3Dto1D(std::size_t x, std::size_t y, std::size_t z);
 
   [[nodiscard]] std::vector<Voxel::Vertex> generateVertices() const;
@@ -34,6 +42,7 @@ class Chunk {
   std::shared_ptr<Buffer> vbo;
   std::shared_ptr<VertexArray> vao;
   std::size_t vertexCount = 0;
+  glm::vec3 position;
   bool changed;
 };
 

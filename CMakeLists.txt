@@ -67,7 +67,7 @@ add_executable(minecraft_thingy
         ${pf_imgui_SOURCE_DIR}/src/pf_imgui/backends/impl/imgui_impl_glfw.cpp
         ${pf_imgui_SOURCE_DIR}/src/pf_imgui/backends/impl/imgui_impl_opengl3.cpp
         src/renderers/Renderer.h src/geGL/Shader.cpp src/geGL/Shader.h
-        ${GEGL_SOURCES} include/Camera.h src/renderers/MinecraftThingyRenderer.cpp src/renderers/MinecraftThingyRenderer.h src/world/Chunk.cpp src/world/Chunk.h src/world/Voxel.h src/ui/UI.cpp src/ui/UI.h)
+        ${GEGL_SOURCES} include/Camera.h src/renderers/MinecraftThingyRenderer.cpp src/renderers/MinecraftThingyRenderer.h src/world/Chunk.cpp src/world/Chunk.h src/world/Voxel.h src/ui/UI.cpp src/ui/UI.h src/noise/NoiseGenerator.h src/noise/PerlinNoiseGenerator.h src/noise/PerlinNoiseGenerator.cpp src/log.h)
 
 
 target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog
