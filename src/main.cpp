@@ -8,6 +8,7 @@
 #include <magic_enum.hpp>
 #include <toml++/toml.h>
 #include <ui/Window.h>
+#include <pf_imgui/serialization.h>
 
 /**
  * Load toml config located next to the exe - config.toml
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
   }
   auto ui = mc::UI{*config["imgui"].as_table(), mainWindow.getWindowHandle()};
   setLogger(
-      [&](const std::string& msg) {
+      [&](const std::string &msg) {
         fmt::print(msg + "\n");
         ui.logMemo->addRecord(msg);
       });
@@ -57,6 +58,8 @@ int main(int argc, char *argv[]) {
   mainWindow.setInputIgnorePredicate([&] { return ui.imguiInterface->isWindowHovered() || ui.imguiInterface->isKeyboardCaptured(); });
 
   auto camera = std::make_shared<Camera>();
+  camera->Position = ui::ig::deserializeGlmVec<glm::vec3>(*config["camera"]["position"].as_array());
+  camera->MovementSpeed = camera->MovementSpeed * 10;
   bool cameraMoveEnabled = false;
   double frameTime = 0.0;// hack
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
@@ -84,7 +87,7 @@ int main(int argc, char *argv[]) {
       }
       if (dir.has_value()) {
         if (mods.is(ModifierKey::Shift)) {
-          camera->ProcessKeyboard(dir.value(), frameTime * 100);
+          camera->ProcessKeyboard(dir.value(), frameTime * 10);
         } else {
           camera->ProcessKeyboard(dir.value(), frameTime);
         }
@@ -92,7 +95,13 @@ int main(int argc, char *argv[]) {
       }
     }
   });
-  pf::mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders", resourcesFolder / "textures", camera};
+  const auto renderDistance = config["chunks"]["render_distance"].value<double>().value();
+  const auto chunkLimit = config["chunks"]["max_limit"].value<std::size_t>().value();
+  mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders",
+                                       resourcesFolder / "textures",
+                                       renderDistance,
+                                       chunkLimit,
+                                       camera};
   if (const auto initResult = renderer.init(); initResult.has_value()) {
     fmt::print(stderr, "Error during initialization: {}\n", initResult.value());
     return -1;
@@ -109,6 +118,9 @@ int main(int argc, char *argv[]) {
                                       true);
   ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
     renderer.setWireframe(enabled);
+  });
+  ui.frustumCullingCheckbox->addValueListener([&](bool enabled) {
+    renderer.setShowFrustumCulling(enabled);
   });
 
   double lastFrameTime = 0.0;

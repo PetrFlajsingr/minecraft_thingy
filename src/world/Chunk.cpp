@@ -6,12 +6,12 @@
 #include <fmt/core.h>
 #include <log.h>
 
-pf::mc::Chunk::Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
+pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
                                                                                  vbo(std::make_shared<Buffer>()),
                                                                                  nbo(std::make_shared<Buffer>()),
                                                                                  vao(std::make_shared<VertexArray>()),
                                                                                  position(position),
-                                                                                 center(position + CHUNK_LEN / 2.0f) {
+                                                                                 center(glm::vec3{position} + CHUNK_LEN / 2.0f) {
   generateVoxelData(noiseGenerator);
 }
 
@@ -60,13 +60,12 @@ void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
-  constexpr auto HEIGHT_GRAVEL = 15;
-  constexpr auto HEIGHT_ICE = 50;
+  constexpr auto HEIGHT_ICE = 30;
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
         const auto index = index3Dto1D(x, y, z);
-        const auto noiseValue = noiseGenerator.noise(position + glm::vec3{x, y, z});
+        const auto noiseValue = noiseGenerator.noise(glm::vec3{position} + glm::vec3{x, y, z});
         if (noiseValue < 0.0) {
           voxels[index].type = Voxel::Type::Empty;
         } else if (noiseValue > 14.0) {
@@ -84,7 +83,7 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
         if (voxels[index].type != Voxel::Type::Empty) {
           if (voxels[index].type == Voxel::Type::Gravel) { continue; }
           if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y + 1, z)) {
-            if (y > HEIGHT_ICE) {
+            if (y + position.y > HEIGHT_ICE) {
               voxels[index].type = Voxel::Type::Gravel;
             } else {
               voxels[index].type = Voxel::Type::Grass;
@@ -213,15 +212,23 @@ bool pf::mc::Chunk::isVoxelFilled(std::size_t x, std::size_t y, std::size_t z) c
 bool pf::mc::Chunk::isVoxelFilled(std::size_t index) const {
   return voxels[index].type != Voxel::Type::Empty;
 }
+
 void pf::mc::Chunk::setChanged() {
   changed = true;
 }
-const glm::vec3 &pf::mc::Chunk::getPosition() const {
+
+const glm::ivec3 &pf::mc::Chunk::getPosition() const {
   return position;
 }
+
 const glm::vec3 &pf::mc::Chunk::getCenter() const {
   return center;
 }
+
 pf::math::BoundingBox<3> pf::mc::Chunk::getAABB() const {
-  return {position, position + static_cast<float>(CHUNK_LEN)};
+  return {position, glm::vec3{position} + static_cast<float>(CHUNK_LEN)};
+}
+
+std::size_t pf::mc::Chunk::getVertexCount() const {
+  return vertexCount;
 }

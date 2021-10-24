@@ -12,15 +12,17 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir, const std::filesystem::path& textureDir,
-                                                         std::shared_ptr<Camera> camera) : chunk(glm::vec3{0, 0, 0}, mc::PerlinNoiseGenerator{}),
+pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path shaderDir,
+                                                         const std::filesystem::path &textureDir,
+                                                         double renderDistance,
+                                                         std::size_t chunkLimit,
+                                                         std::shared_ptr<Camera> camera) : chunkManager(chunkLimit, renderDistance),
                                                                                            shaderDir(std::move(shaderDir)),
-                                                                                           camera(std::move(camera))
-                                                                                           {
+                                                                                           camera(std::move(camera)) {
   int width;
   int height;
   int channels;
-  auto stbImgDeleter = [] (stbi_uc *ptr) {
+  auto stbImgDeleter = [](stbi_uc *ptr) {
     stbi_image_free(ptr);
   };
   std::unique_ptr<stbi_uc, decltype(stbImgDeleter)> stbImage(stbi_load((textureDir / "blocks.png").string().c_str(), &width, &height, &channels, 0), stbImgDeleter);
@@ -51,6 +53,7 @@ std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
 }
 
 void pf::mc::MinecraftThingyRenderer::render() {
+  chunkManager.generateChunks(camera->Position);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glEnable(GL_CULL_FACE);
@@ -69,11 +72,22 @@ void pf::mc::MinecraftThingyRenderer::render() {
   program->setMatrix4fv("mvp", &mvp[0][0]);
   program->set3fv("lightDir", &lightDir[0]);
   blockTextureAtlas->bind(0);
-  chunk.render();
+  const auto viewFrustum = math::ViewFrustum::FromProjectionView(viewMatrix, projectionMatrix);
+  const auto chunksToRender = chunkManager.getChunksToRender(viewFrustum, showFrustumCulling);
+  for (const auto &chunk : chunksToRender) {
+    program->set3fv("chunkPosition", &glm::vec3{chunk->getPosition()}[0]);
+    chunk->render();
+  }
 }
+
 void pf::mc::MinecraftThingyRenderer::setLightDir(const glm::vec3 &lightDir) {
   MinecraftThingyRenderer::lightDir = lightDir;
 }
+
 void pf::mc::MinecraftThingyRenderer::setWireframe(bool wireframe) {
   MinecraftThingyRenderer::wireframe = wireframe;
+}
+
+void pf::mc::MinecraftThingyRenderer::setShowFrustumCulling(bool showFrustumCulling) {
+  MinecraftThingyRenderer::showFrustumCulling = showFrustumCulling;
 }

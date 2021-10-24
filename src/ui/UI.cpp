@@ -30,6 +30,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   moveToOriginButton = &camWindowLayout->createChild<Button>("move_origin_btn", "Move to origin");
   showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe", false, Persistent::Yes);
   clipCheckbox = &camWindowLayout->createChild<Checkbox>("clip_checkbox", "Clip - not implemented", true, Persistent::Yes);
+  frustumCullingCheckbox = &camWindowLayout->createChild<Checkbox>("frustum_culling_checkbox", "Show frustum culling", false, Persistent::Yes);
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
   logMemo = &logWindow->createChild<Memo>("log_memo", "Log");

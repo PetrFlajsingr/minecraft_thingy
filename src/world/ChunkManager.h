@@ -27,9 +27,10 @@ class ChunkManager {
  private:
   void unloadDistantChunks(glm::vec3 cameraPosition);
 
-  [[nodiscard]] std::vector<glm::vec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
+  [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
 
   std::vector<std::unique_ptr<Chunk>> chunks;
+  std::vector<glm::ivec3> emptyChunks;
   std::size_t chunkLimit;
   double renderDistance;
   double seed;

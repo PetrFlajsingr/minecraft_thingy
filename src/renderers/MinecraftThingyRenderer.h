@@ -7,16 +7,20 @@
 
 #include "Renderer.h"
 #include <Camera.h>
-#include <world/Chunk.h>
 #include <filesystem>
-#include <memory>
 #include <geGL/Texture.h>
+#include <memory>
+#include <world/ChunkManager.h>
 
 namespace pf::mc {
 
 class MinecraftThingyRenderer : public ogl::Renderer {
  public:
-  MinecraftThingyRenderer(std::filesystem::path shaderDir, const std::filesystem::path& textureDir, std::shared_ptr<Camera> camera);
+  MinecraftThingyRenderer(std::filesystem::path shaderDir,
+                          const std::filesystem::path &textureDir,
+                          double renderDistance,
+                          std::size_t chunkLimit,
+                          std::shared_ptr<Camera> camera);
 
   std::optional<std::string> init() override;
   void render() override;
@@ -24,16 +28,18 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   void setLightDir(const glm::vec3 &lightDir);
 
   void setWireframe(bool wireframe);
+  void setShowFrustumCulling(bool showFrustumCulling);
 
  private:
-  Chunk chunk;
+  ChunkManager chunkManager;
   std::filesystem::path shaderDir;
   std::shared_ptr<Camera> camera;
   std::shared_ptr<Texture> blockTextureAtlas;
 
-  glm::vec3 lightDir;
+  glm::vec3 lightDir{};
 
   bool wireframe = false;
+  bool showFrustumCulling = false;
 
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;

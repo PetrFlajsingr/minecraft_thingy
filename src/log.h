@@ -6,6 +6,7 @@
 #define MINECRAFT_THINGY_SRC_LOG_H
 
 #include <functional>
+#include <fmt/format.h>
 
 namespace details {
 inline std::function<void(std::string)> log = [](auto) {};

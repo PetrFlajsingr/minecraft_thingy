@@ -32,6 +32,7 @@ struct UI {
       ui::ig::Button *moveToOriginButton;
       ui::ig::Checkbox *showWireframeCheckbox;
       ui::ig::Checkbox *clipCheckbox;
+      ui::ig::Checkbox *frustumCullingCheckbox;
   ui::ig::Window *logWindow;
     ui::ig::Memo *logMemo;
   ui::ig::Window *lightingWindow;
