@@ -50,7 +50,9 @@ struct UI {
       ui::ig::RadioButton *addVoxelBtn;
       ui::ig::RadioButton *destroyVoxelBtn;
     ui::ig::Combobox<Voxel::Type> *voxelTypeCombobox;
-
+  ui::ig::Window *worldWindow;
+    ui::ig::Input<double> *seedInput;
+    ui::ig::Button *generateButton;
   // clang-format on
 
   std::unique_ptr<ui::ig::ImGuiInterface> imguiInterface;

@@ -64,6 +64,11 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
                                                                           Persistent::Yes);
   voxelTypeCombobox->setSelectedItem(Voxel::Type::Dirt);
 
+  worldWindow = &imguiInterface->createWindow("world_window", "World");
+  worldWindow->setIsDockable(true);
+  seedInput = &worldWindow->createChild<Input<double>>("seed_input", "Seed");
+  generateButton = &worldWindow->createChild<Button>("generate_button", "Generate");
+
   imguiInterface->setStateFromConfig();
 }
 
