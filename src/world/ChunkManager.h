@@ -12,6 +12,7 @@
 #include <utils/Random.h>
 #include <noise/PerlinNoiseGenerator.h>
 #include <pf_common/parallel/ThreadPool.h>
+#include <pf_common/parallel/Safe.h>
 
 namespace pf::mc {
 
@@ -31,8 +32,8 @@ class ChunkManager {
 
   [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
 
-  std::vector<std::unique_ptr<Chunk>> chunks;
-  std::vector<glm::ivec3> emptyChunks;
+  Safe<std::vector<std::unique_ptr<Chunk>>> chunks;
+  Safe<std::vector<glm::ivec3>> emptyChunks;
   std::size_t chunkLimit;
   double renderDistance;
   double seed;

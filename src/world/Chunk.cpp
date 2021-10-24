@@ -99,7 +99,7 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
           if (voxels[index].type == Voxel::Type::Gravel) { continue; }
           if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y + 1, z)) {
             if (y + position.y > HEIGHT_ICE) {
-              voxels[index].type = Voxel::Type::Gravel;
+              voxels[index].type = Voxel::Type::Ice;
             } else {
               voxels[index].type = Voxel::Type::Grass;
             }

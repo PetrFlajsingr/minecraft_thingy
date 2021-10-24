@@ -17,8 +17,8 @@ pf::mc::ChunkManager::~ChunkManager() {
 }
 
 void pf::mc::ChunkManager::resetWithSeed(double seed) {
-  chunks.clear();
-  emptyChunks.clear();
+  chunks.writeAccess()->clear();
+  emptyChunks.writeAccess()->clear();
   ChunkManager::seed = seed;
   noiseGenerator.setSeed(seed);
 }
@@ -27,40 +27,29 @@ void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
   unloadDistantChunks(cameraPosition);
   const auto newChunkPositions = getAllChunksToGenerate(cameraPosition);
 
-  using ChunkResultPair = std::pair<Chunk *, glm::ivec3>;
-  using FutureReturnType = std::future<ChunkResultPair>;
-  std::vector<FutureReturnType> futures{};
   for (const auto &position : newChunkPositions) {
-    if (std::ranges::find(emptyChunks, position) != std::ranges::end(emptyChunks)) {
+    auto emptyChunksAccess = emptyChunks.readOnlyAccess();
+    if (std::ranges::find(*emptyChunksAccess, position) != std::ranges::end(*emptyChunksAccess)) {
       continue;
     }
-    if (chunks.size() >= chunkLimit) { break; }
     // creating the chunk outside thread because it creates buffers
     auto newChunk = new Chunk(position, noiseGenerator);// FIXME only using new here 'cause no time and MSVC template errors really suck
-    futures.emplace_back(
-        loadingThreadPool.enqueue([position, this, newChunk]() -> ChunkResultPair {
-          newChunk->createMesh();
-          if (newChunk->getVertexCount() == 0) {
-            delete newChunk;// FIXME only using delete here 'cause no time and MSVC template errors really suck
-            return {nullptr, position};
-          }
-          return {newChunk, position};
-        }));
-  }
-  for (auto &future : futures) {
-    const auto &[newChunk, position] = std::move(future.get());
-    if (newChunk == nullptr) {
-      emptyChunks.emplace_back(position);
-      delete newChunk;// FIXME only using delete here 'cause no time and MSVC template errors really suck
-    } else {
-      chunks.push_back(std::unique_ptr<Chunk>(newChunk));
-    }
+    loadingThreadPool.enqueue([position, this, newChunk] {
+      if (chunks.readOnlyAccess()->size() >= chunkLimit) { return; }
+      newChunk->createMesh();
+      if (newChunk->getVertexCount() == 0) {
+        delete newChunk;// FIXME only using delete here 'cause no time and MSVC template errors really suck
+        emptyChunks.writeAccess()->emplace_back(position);
+      } else {
+        chunks.writeAccess()->emplace_back(std::unique_ptr<Chunk>(newChunk));
+      }
+    });
   }
 }
 
 std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::math::ViewFrustum &viewFrustum, bool onlyFullyContained) {
   std::vector<pf::mc::Chunk *> result{};
-  for (const auto &chunk : chunks) {
+  for (const auto &chunk : *chunks.readOnlyAccess()) {
     if (onlyFullyContained && viewFrustum.contains(chunk->getAABB()) == math::RelativePosition::Inside) {
       result.emplace_back(chunk.get());
     }
@@ -71,14 +60,15 @@ std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::m
   return result;
 }
 void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
-  auto toRemove = std::ranges::remove_if(chunks, [&](const auto &chunk) {
+  auto chunksAccess = chunks.writeAccess();
+  auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
     return glm::distance(chunk->getCenter(), cameraPosition) > renderDistance;
   });
   if (!toRemove.empty()) {
     log("Unloading {} chunks", toRemove.size());
   }
-  chunks.erase(std::ranges::begin(toRemove),
-               std::ranges::end(chunks));
+  chunksAccess->erase(std::ranges::begin(toRemove),
+                      std::ranges::end(*chunksAccess));
 }
 
 double pf::mc::ChunkManager::getSeed() const {
@@ -103,7 +93,7 @@ std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 c
   }
   result.erase(
       std::ranges::begin(std::ranges::remove_if(result, [this](const auto &pos) {
-        for (const auto &chunk : chunks) {
+        for (const auto &chunk : *chunks.readOnlyAccess()) {
           if (chunk->getPosition() == pos) {
             return true;
           }
