@@ -62,9 +62,30 @@ int main(int argc, char *argv[]) {
   camera->MovementSpeed = camera->MovementSpeed * 10;
   bool cameraMoveEnabled = false;
   double frameTime = 0.0;// hack
+  const auto renderDistance = config["chunks"]["render_distance"].value<double>().value();
+  const auto chunkLimit = config["chunks"]["max_limit"].value<std::size_t>().value();
+  mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders",
+                                       resourcesFolder / "textures",
+                                       renderDistance,
+                                       chunkLimit,
+                                       camera,
+                                       mainWindow.getWidth(),
+                                       mainWindow.getHeight()};
+  if (const auto initResult = renderer.init(); initResult.has_value()) {
+    fmt::print(stderr, "Error during initialization: {}\n", initResult.value());
+    return -1;
+  }
+
+
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
     if (button == MouseButton::Right) {
       cameraMoveEnabled = type == MouseEventType::Down;
+    }
+    if (button == MouseButton::Left && cameraMoveEnabled) {
+      switch(type) {
+        case MouseEventType::Down: renderer.userMouseDown(); break;
+        case MouseEventType::Up: renderer.userMouseUp(); break;
+      }
     }
   });
   mainWindow.setMouseMoveCallback([&](double, double, double deltaX, double deltaY) {
@@ -95,17 +116,6 @@ int main(int argc, char *argv[]) {
       }
     }
   });
-  const auto renderDistance = config["chunks"]["render_distance"].value<double>().value();
-  const auto chunkLimit = config["chunks"]["max_limit"].value<std::size_t>().value();
-  mc::MinecraftThingyRenderer renderer{resourcesFolder / "shaders",
-                                       resourcesFolder / "textures",
-                                       renderDistance,
-                                       chunkLimit,
-                                       camera};
-  if (const auto initResult = renderer.init(); initResult.has_value()) {
-    fmt::print(stderr, "Error during initialization: {}\n", initResult.value());
-    return -1;
-  }
 
   ui.moveToOriginButton->addClickListener([&] {
     camera->Position = {0.f, 0.f, 0.f};

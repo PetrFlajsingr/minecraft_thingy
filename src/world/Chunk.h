@@ -32,8 +32,8 @@ class Chunk {
   [[nodiscard]] math::BoundingBox<3> getAABB() const;
   [[nodiscard]] std::size_t getVertexCount() const;
 
-  [[nodiscard]] Voxel getVoxel(std::size_t x, std::size_t y, std::size_t z) const;
-  void setVoxel(std::size_t x, std::size_t y, std::size_t z, Voxel::Type type);
+  [[nodiscard]] Voxel getVoxel(glm::ivec3 coords) const;
+  void setVoxel(glm::ivec3 coords, Voxel::Type type);
 
   [[nodiscard]] bool isVoxelFilled(std::size_t x, std::size_t y, std::size_t z) const;
   [[nodiscard]] bool isVoxelFilled(std::size_t index) const;

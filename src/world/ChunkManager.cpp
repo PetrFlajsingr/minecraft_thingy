@@ -47,6 +47,25 @@ void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
   }
 }
 
+std::optional<pf::mc::Voxel> pf::mc::ChunkManager::getVoxel(glm::ivec3 coords) const {
+  const auto chunk = chunkForCoords(coords);
+  if (chunk == nullptr) {
+    return std::nullopt;
+  }
+  const auto localCoords = coords - chunk->getPosition();
+  return chunk->getVoxel(localCoords);
+}
+
+void pf::mc::ChunkManager::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
+  const auto chunk = chunkForCoords(coords);
+  if (chunk == nullptr) {
+    log("No chunk found");
+    return;
+  }
+  const auto localCoords = coords - chunk->getPosition();
+  chunk->setVoxel(localCoords, type);
+}
+
 std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::math::ViewFrustum &viewFrustum, bool onlyFullyContained) {
   std::vector<pf::mc::Chunk *> result{};
   for (const auto &chunk : *chunks.readOnlyAccess()) {
@@ -105,4 +124,44 @@ std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 c
     return glm::distance(cameraPosition, glm::vec3{lhs}) < glm::distance(cameraPosition, glm::vec3{rhs});
   });
   return result;
+}
+
+pf::mc::Chunk *pf::mc::ChunkManager::chunkForCoords(glm::ivec3 coords) const {
+  for (const auto &chunk : *chunks.readOnlyAccess()) {
+    auto chunkAABB = chunk->getAABB();
+    chunkAABB.p2 -= 1.f;
+    if (chunk->getAABB().contains(coords)) {
+      return chunk.get();
+    }
+  }
+  return nullptr;
+}
+
+std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay(glm::vec3 position, glm::vec3 direction, double maxDistance) const {
+  constexpr auto RAY_STEP = 0.01f;
+  RayCastResult result{};
+  glm::ivec3 rayPosition = position;
+  glm::ivec3 previousPosition{};
+  for (float i = 0; i <= maxDistance; i += RAY_STEP) {
+    previousPosition = rayPosition;
+    rayPosition = position + direction * i;
+    if (const auto voxel = getVoxel(rayPosition); voxel.has_value() && voxel->type != Voxel::Type::Empty) {
+      result.coords = rayPosition;
+      if (previousPosition.x > rayPosition.x) {
+        result.face = Direction::Right;
+      } else if (previousPosition.x < rayPosition.x) {
+        result.face = Direction::Left;
+      } else if (previousPosition.y > rayPosition.y) {
+        result.face = Direction::Up;
+      } else if (previousPosition.y < rayPosition.y) {
+        result.face = Direction::Down;
+      } else if (previousPosition.z > rayPosition.z) {
+        result.face = Direction::Backward;
+      } else if (previousPosition.z < rayPosition.z) {
+        result.face = Direction::Forward; // might need to switch these up
+      }
+      return result;
+    }
+  }
+  return std::nullopt;
 }

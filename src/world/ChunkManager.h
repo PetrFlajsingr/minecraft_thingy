@@ -5,14 +5,15 @@
 #ifndef MINECRAFT_THINGY_SRC_WORLD_CHUNKMANAGER_H
 #define MINECRAFT_THINGY_SRC_WORLD_CHUNKMANAGER_H
 
-#include <glm/vec3.hpp>
-#include <vector>
 #include "Chunk.h"
-#include <pf_common/math/ViewFrustum.h>
-#include <utils/Random.h>
+#include <glm/vec3.hpp>
 #include <noise/PerlinNoiseGenerator.h>
-#include <pf_common/parallel/ThreadPool.h>
+#include <pf_common/math/ViewFrustum.h>
 #include <pf_common/parallel/Safe.h>
+#include <pf_common/parallel/ThreadPool.h>
+#include <utils/Random.h>
+#include <vector>
+#include <utils/Direction.h>
 
 namespace pf::mc {
 
@@ -26,9 +27,21 @@ class ChunkManager {
 
   void generateChunks(glm::vec3 cameraPosition);
 
+  struct RayCastResult {
+    glm::ivec3 coords;
+    Direction face;
+  };
+  [[nodiscard]] std::optional<RayCastResult> castRay(glm::vec3 position, glm::vec3 direction, double maxDistance = 10) const;
+
+  [[nodiscard]] std::optional<Voxel> getVoxel(glm::ivec3 coords) const;
+  void setVoxel(glm::ivec3 coords, Voxel::Type type);
+
   [[nodiscard]] std::vector<Chunk *> getChunksToRender(const math::ViewFrustum &viewFrustum, bool onlyFullyContained = false);
+
  private:
   void unloadDistantChunks(glm::vec3 cameraPosition);
+
+  [[nodiscard]] Chunk *chunkForCoords(glm::ivec3 coords) const;
 
   [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
 
@@ -42,5 +55,5 @@ class ChunkManager {
   ThreadPool loadingThreadPool{4};
 };
 
-}
+}// namespace pf::mc
 #endif//MINECRAFT_THINGY_SRC_WORLD_CHUNKMANAGER_H

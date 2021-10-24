@@ -61,15 +61,15 @@ std::size_t pf::mc::Chunk::index3Dto1D(std::size_t x, std::size_t y, std::size_t
   return z * CHUNK_LEN * CHUNK_LEN + y * CHUNK_LEN + x;
 }
 
-pf::mc::Voxel pf::mc::Chunk::getVoxel(std::size_t x, std::size_t y, std::size_t z) const {
-  assert(x < CHUNK_LEN && y < CHUNK_LEN && z < CHUNK_LEN);
-  const auto voxelIndex = index3Dto1D(x, y, z);
+pf::mc::Voxel pf::mc::Chunk::getVoxel(glm::ivec3 coords) const {
+  assert(coords.x < CHUNK_LEN && coords.y < CHUNK_LEN && coords.z < CHUNK_LEN);
+  const auto voxelIndex = index3Dto1D(coords.x, coords.y, coords.z);
   return voxels[voxelIndex];
 }
 
-void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc::Voxel::Type type) {
-  assert(x < CHUNK_LEN && y < CHUNK_LEN && z < CHUNK_LEN);
-  const auto voxelIndex = index3Dto1D(x, y, z);
+void pf::mc::Chunk::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
+  assert(coords.x < CHUNK_LEN && coords.y < CHUNK_LEN && coords.z < CHUNK_LEN);
+  const auto voxelIndex = index3Dto1D(coords.x, coords.y, coords.z);
   voxels[voxelIndex].type = type;
   setChanged();
 }

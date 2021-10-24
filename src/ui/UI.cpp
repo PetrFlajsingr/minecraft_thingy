@@ -33,7 +33,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   frustumCullingCheckbox = &camWindowLayout->createChild<Checkbox>("frustum_culling_checkbox", "Show frustum culling", false, Persistent::Yes);
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
-  logMemo = &logWindow->createChild<Memo>("log_memo", "Log");
+  logMemo = &logWindow->createChild<Memo>("log_memo", "Log", 0, true, true, 50);
   logWindow->setIsDockable(true);
 
   lightingWindow = &imguiInterface->createWindow("lighting_window", "Lighting");

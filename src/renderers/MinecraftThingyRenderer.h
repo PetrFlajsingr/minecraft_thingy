@@ -20,9 +20,13 @@ class MinecraftThingyRenderer : public ogl::Renderer {
                           const std::filesystem::path &textureDir,
                           double renderDistance,
                           std::size_t chunkLimit,
-                          std::shared_ptr<Camera> camera);
+                          std::shared_ptr<Camera> camera,
+                          std::size_t windowWidth,
+                          std::size_t windowHeight);
 
   std::optional<std::string> init() override;
+  void userMouseDown();
+  void userMouseUp();
   void render() override;
 
   void setLightDir(const glm::vec3 &lightDir);
@@ -31,6 +35,10 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   void setShowFrustumCulling(bool showFrustumCulling);
 
  private:
+  glm::ivec3 getLookedAtCoordinatesFromDepth() const;
+
+  glm::mat4 getProjectionMatrix() const;
+
   ChunkManager chunkManager;
   std::filesystem::path shaderDir;
   std::shared_ptr<Camera> camera;
@@ -44,6 +52,8 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;
   std::shared_ptr<Program> program;
+  std::size_t windowWidth;
+  std::size_t windowHeight;
 };
 
 }// namespace pf::mc
