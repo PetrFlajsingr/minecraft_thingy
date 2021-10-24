@@ -133,28 +133,6 @@ void pf::mc::MinecraftThingyRenderer::setShowFrustumCulling(bool showFrustumCull
   MinecraftThingyRenderer::showFrustumCulling = showFrustumCulling;
 }
 
-void pf::mc::MinecraftThingyRenderer::userMouseDown() {
-  log("Mouse down");
-  //const auto coords = getLookedAtCoordinatesFromDepth();
-  const auto coords = chunkManager.castRay(camera->Position, camera->Front);
-  if (!coords.has_value()) {
-    return;
-  }
-  log("Coords: {}x{}x{}, direction: {}", coords->coords.x, coords->coords.y, coords->coords.z, magic_enum::enum_name(coords->face));
-}
-
-void pf::mc::MinecraftThingyRenderer::userMouseUp() {
-  log("Mouse up");
-  //const auto coords = getLookedAtCoordinatesFromDepth();
-  //chunkManager.setVoxel(coords, Voxel::Type::Empty);
-  const auto coords = chunkManager.castRay(camera->Position, camera->Front);
-  if (!coords.has_value()) {
-    return;
-  }
-  chunkManager.setVoxel(coords->coords, Voxel::Type::Gravel);
-  log("Coords: {}x{}x{}, direction: {}", coords->coords.x, coords->coords.y, coords->coords.z, magic_enum::enum_name(coords->face));
-}
-
 glm::ivec3 pf::mc::MinecraftThingyRenderer::getLookedAtCoordinatesFromDepth() const {
   float depth;
   glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
@@ -171,17 +149,40 @@ void pf::mc::MinecraftThingyRenderer::setDrawOutline(bool drawOutline) {
   MinecraftThingyRenderer::drawOutline = drawOutline;
 }
 void pf::mc::MinecraftThingyRenderer::userMouseMove() {
+  reloadOutlineInfo();
+}
+
+void  pf::mc::MinecraftThingyRenderer::userDestroy() {
+  const auto castResult = chunkManager.castRay(camera->Position, camera->Front);
+  if (castResult.has_value()) {
+    chunkManager.setVoxel(castResult->coords, Voxel::Type::Empty);
+    reloadOutlineInfo();
+  }
+}
+
+void  pf::mc::MinecraftThingyRenderer::userBuild(pf::mc::Voxel::Type type) {
+  if (outlinePosition.has_value()) {
+    chunkManager.setVoxel(*outlinePosition, type);
+    reloadOutlineInfo();
+  }
+}
+void pf::mc::MinecraftThingyRenderer::setOutlineType(pf::mc::Outline outlineType) {
+  MinecraftThingyRenderer::outlineType = outlineType;
+}
+void pf::mc::MinecraftThingyRenderer::reloadOutlineInfo() {
   if (drawOutline) {
     const auto castResult = chunkManager.castRay(camera->Position, camera->Front);
     if (castResult.has_value()) {
       outlinePosition = castResult->coords;
-      switch (castResult->face) {
-        case Direction::Up: outlinePosition->y += 1; break;
-        case Direction::Down: outlinePosition->y -= 1; break;
-        case Direction::Left: outlinePosition->x -= 1; break;
-        case Direction::Right: outlinePosition->x += 1; break;
-        case Direction::Forward: outlinePosition->z -= 1; break;
-        case Direction::Backward: outlinePosition->z += 1; break;
+      if (outlineType == Outline::Neighbor) {
+        switch (castResult->face) {
+          case Direction::Up: outlinePosition->y += 1; break;
+          case Direction::Down: outlinePosition->y -= 1; break;
+          case Direction::Left: outlinePosition->x -= 1; break;
+          case Direction::Right: outlinePosition->x += 1; break;
+          case Direction::Forward: outlinePosition->z -= 1; break;
+          case Direction::Backward: outlinePosition->z += 1; break;
+        }
       }
     } else {
       outlinePosition = std::nullopt;

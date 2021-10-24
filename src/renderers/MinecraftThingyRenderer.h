@@ -14,6 +14,11 @@
 
 namespace pf::mc {
 
+enum class Outline {
+  Voxel, Neighbor
+};
+
+
 class MinecraftThingyRenderer : public ogl::Renderer {
  public:
   MinecraftThingyRenderer(std::filesystem::path shaderDir,
@@ -25,9 +30,11 @@ class MinecraftThingyRenderer : public ogl::Renderer {
                           std::size_t windowHeight);
 
   std::optional<std::string> init() override;
-  void userMouseDown();
-  void userMouseUp();
   void userMouseMove();
+
+  void userDestroy();
+  void userBuild(Voxel::Type type);
+
   void render() override;
 
   void setLightDir(const glm::vec3 &lightDir);
@@ -36,9 +43,12 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   void setShowFrustumCulling(bool showFrustumCulling);
 
   void setDrawOutline(bool drawOutline);
+  void setOutlineType(Outline outlineType);
 
  private:
   glm::ivec3 getLookedAtCoordinatesFromDepth() const;
+
+  void reloadOutlineInfo();
 
   glm::mat4 getProjectionMatrix() const;
 
@@ -69,6 +79,8 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   std::size_t windowWidth;
   std::size_t windowHeight;
+
+  Outline outlineType;
 };
 
 }// namespace pf::mc

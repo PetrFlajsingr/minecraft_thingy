@@ -6,9 +6,9 @@
 #include <fmt/format.h>
 #include <log.h>
 #include <magic_enum.hpp>
+#include <pf_imgui/serialization.h>
 #include <toml++/toml.h>
 #include <ui/Window.h>
-#include <pf_imgui/serialization.h>
 
 /**
  * Load toml config located next to the exe - config.toml
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
   camera->Position = ui::ig::deserializeGlmVec<glm::vec3>(*config["camera"]["position"].as_array());
   camera->MovementSpeed = camera->MovementSpeed * 10;
   bool cameraMoveEnabled = false;
+  bool destructionActive = false;
   double frameTime = 0.0;// hack
   const auto renderDistance = config["chunks"]["render_distance"].value<double>().value();
   const auto chunkLimit = config["chunks"]["max_limit"].value<std::size_t>().value();
@@ -76,15 +77,20 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
     if (button == MouseButton::Right) {
       cameraMoveEnabled = type == MouseEventType::Down;
     }
     if (button == MouseButton::Left && cameraMoveEnabled) {
-      switch(type) {
-        case MouseEventType::Down: renderer.userMouseDown(); break;
-        case MouseEventType::Up: renderer.userMouseUp(); break;
+      switch (type) {
+        case MouseEventType::Down: break;
+        case MouseEventType::Up:
+          if (destructionActive) {
+            renderer.userDestroy();
+          } else {
+            renderer.userBuild(ui.voxelTypeCombobox->getValue());
+          }
+          break;
       }
     }
   });
@@ -129,13 +135,16 @@ int main(int argc, char *argv[]) {
                                       true);
   ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
     renderer.setWireframe(enabled);
-  });
+  }, true);
   ui.frustumCullingCheckbox->addValueListener([&](bool enabled) {
     renderer.setShowFrustumCulling(enabled);
-  });
-  ui.addVoxelBtn->addValueListener([&](bool enabled) {
-    renderer.setDrawOutline(enabled);
   }, true);
+  renderer.setDrawOutline(true);
+  ui.addVoxelBtn->addValueListener([&](bool enabled) {
+    destructionActive = !enabled;
+    renderer.setOutlineType(destructionActive ? mc::Outline::Voxel : mc::Outline::Neighbor);
+  },
+                                   true);
 
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};
