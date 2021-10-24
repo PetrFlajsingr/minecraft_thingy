@@ -86,6 +86,7 @@ void pf::mc::MinecraftThingyRenderer::render() {
 
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_MULTISAMPLE);
 
   if (wireframe) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
