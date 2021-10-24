@@ -11,8 +11,8 @@ namespace pf::mc {
 class PerlinNoiseGenerator : public NoiseGenerator {
  public:
   PerlinNoiseGenerator();
-  explicit PerlinNoiseGenerator(float seed);
-  void setSeed(float seed) override;
+  explicit PerlinNoiseGenerator(double seed);
+  void setSeed(double seed) override;
   [[nodiscard]] double noise(glm::vec3 coord) const override;
 
  private:

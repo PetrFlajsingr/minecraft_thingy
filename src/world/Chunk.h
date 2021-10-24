@@ -14,7 +14,7 @@
 
 namespace pf::mc {
 
-constexpr static std::size_t CHUNK_LEN = 80; // TODO: change this
+constexpr static std::size_t CHUNK_LEN = 32;
 constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 
 class Chunk {

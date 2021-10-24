@@ -67,7 +67,13 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
         const auto index = index3Dto1D(x, y, z);
         const auto noiseValue = noiseGenerator.noise(position + glm::vec3{x, y, z});
-        voxels[index].type = noiseValue > 0.0 ? Voxel::Type::Gravel : Voxel::Type::Empty;
+        if (noiseValue < 0.0) {
+          voxels[index].type = Voxel::Type::Empty;
+        } else if (noiseValue > 14.0) {
+          voxels[index].type = Voxel::Type::Gravel;
+        } else {
+          voxels[index].type = Voxel::Type::Dirt;
+        }
       }
     }
   }
@@ -76,10 +82,7 @@ void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerat
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
         const auto index = index3Dto1D(x, y, z);
         if (voxels[index].type != Voxel::Type::Empty) {
-          if (y < HEIGHT_GRAVEL) {
-            voxels[index].type = Voxel::Type::Gravel;
-            continue;
-          }
+          if (voxels[index].type == Voxel::Type::Gravel) { continue; }
           if (y < CHUNK_LEN - 1 && !isVoxelFilled(x, y + 1, z)) {
             if (y > HEIGHT_ICE) {
               voxels[index].type = Voxel::Type::Gravel;
