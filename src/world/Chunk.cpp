@@ -62,9 +62,6 @@ std::size_t pf::mc::Chunk::index3Dto1D(std::size_t x, std::size_t y, std::size_t
 }
 
 pf::mc::Voxel pf::mc::Chunk::getVoxel(glm::ivec3 coords) const {
-  if (!(coords.x < CHUNK_LEN && coords.y < CHUNK_LEN && coords.z < CHUNK_LEN)) {
-    log("hihi");
-  }
   assert(coords.x < CHUNK_LEN && coords.y < CHUNK_LEN && coords.z < CHUNK_LEN);
   const auto voxelIndex = index3Dto1D(coords.x, coords.y, coords.z);
   return voxels[voxelIndex];

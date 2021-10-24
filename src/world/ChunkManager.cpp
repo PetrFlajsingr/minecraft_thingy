@@ -57,10 +57,23 @@ std::optional<pf::mc::Voxel> pf::mc::ChunkManager::getVoxel(glm::ivec3 coords) c
 }
 
 void pf::mc::ChunkManager::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
-  const auto chunk = chunkForCoords(coords);
+  auto chunk = chunkForCoords(coords);
   if (chunk == nullptr) {
     log("No chunk found");
-    return;
+    if (type == Voxel::Type::Empty) {
+      return;
+    }
+    const auto chunkCoords = coords - glm::abs(coords % static_cast<int>(CHUNK_LEN));
+    auto emptyChunksAccess = emptyChunks.writeAccess();
+    std::unique_ptr<Chunk> newChunk = nullptr;
+    if (const auto iter = std::ranges::find_if(*emptyChunksAccess, [chunkCoords](auto coord) { return coord == chunkCoords; }); iter != emptyChunksAccess->end()) {
+      emptyChunksAccess->erase(iter);
+      newChunk = std::make_unique<Chunk>(chunkCoords, noiseGenerator);
+    } else {
+      newChunk = std::make_unique<Chunk>(chunkCoords, noiseGenerator);
+      newChunk->createMesh();
+    }
+    chunk = chunks.writeAccess()->emplace_back(std::move(newChunk)).get();
   }
   const auto localCoords = coords - chunk->getPosition();
   chunk->setVoxel(localCoords, type);
