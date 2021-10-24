@@ -53,6 +53,7 @@ struct UI {
   ui::ig::Window *worldWindow;
     ui::ig::Input<double> *seedInput;
     ui::ig::Button *generateButton;
+    ui::ig::Button *randomizeButton;
   // clang-format on
 
   std::unique_ptr<ui::ig::ImGuiInterface> imguiInterface;

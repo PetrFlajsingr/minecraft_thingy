@@ -166,6 +166,18 @@ int main(int argc, char *argv[]) {
   },
                                    true);
 
+  ui.generateButton->addClickListener([&] {
+    renderer.setWorldSeed(ui.seedInput->getValue());
+  });
+
+  ui.randomizeButton->addClickListener([&] {
+    const auto seed = generateSeed();
+    ui.seedInput->setValue(seed);
+    renderer.setWorldSeed(seed);
+  });
+
+  ui.seedInput->setValue(renderer.getWorldSeed());
+
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};
   mainWindow.setMainLoop([&](double time) {

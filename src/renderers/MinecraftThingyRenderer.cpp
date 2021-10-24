@@ -200,3 +200,9 @@ void pf::mc::MinecraftThingyRenderer::reloadOutlineInfo() {
     }
   }
 }
+double pf::mc::MinecraftThingyRenderer::getWorldSeed() const {
+  return chunkManager.getSeed();
+}
+void pf::mc::MinecraftThingyRenderer::setWorldSeed(double seed) {
+  chunkManager.resetWithSeed(seed);
+}
