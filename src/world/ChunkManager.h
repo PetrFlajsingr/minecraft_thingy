@@ -11,12 +11,14 @@
 #include <pf_common/math/ViewFrustum.h>
 #include <utils/Random.h>
 #include <noise/PerlinNoiseGenerator.h>
+#include <pf_common/parallel/ThreadPool.h>
 
 namespace pf::mc {
 
 class ChunkManager {
  public:
   explicit ChunkManager(std::size_t chunkLimit, double renderDistance, double seed = generateSeed());
+  virtual ~ChunkManager();
 
   void resetWithSeed(double seed);
   [[nodiscard]] double getSeed() const;
@@ -35,6 +37,8 @@ class ChunkManager {
   double renderDistance;
   double seed;
   PerlinNoiseGenerator noiseGenerator;
+
+  ThreadPool loadingThreadPool{4};
 };
 
 }

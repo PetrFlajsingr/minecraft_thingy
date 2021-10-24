@@ -24,6 +24,7 @@ class Chunk {
   void setChanged();
 
   void update();
+  void createMesh();
   void render();
 
   [[nodiscard]] const glm::ivec3 &getPosition() const;
@@ -56,6 +57,8 @@ class Chunk {
   glm::ivec3 position;
   glm::vec3 center;
   bool changed;
+  bool geometryGenerated = false;
+  GeometryData mesh;
 };
 
 }

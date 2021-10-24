@@ -19,19 +19,33 @@ void pf::mc::Chunk::update() {
   if (!changed) {
     return;
   }
-  log("updating chunk at {}x{}x{}", position.x, position.y, position.z);
   changed = false;
-  const auto data = generateGeometry();
-  vertexCount = data.vertices.size();
-  log("generated {} vertices", vertexCount);
+  createMesh();
   if (vertexCount == 0) {
     return;
   }
-  vbo->alloc(vertexCount * sizeof(Voxel::Vertex), data.vertices.data(), GL_STATIC_DRAW);
-  nbo->alloc(data.normals.size() * sizeof(glm::vec3), data.normals.data(), GL_STATIC_DRAW);
+  vbo->alloc(vertexCount * sizeof(Voxel::Vertex), mesh.vertices.data(), GL_STATIC_DRAW);
+  nbo->alloc(mesh.normals.size() * sizeof(glm::vec3), mesh.normals.data(), GL_STATIC_DRAW);
   vao->addAttrib(vbo, 0, 4, GL_BYTE, 4 * sizeof(std::uint8_t));
   vao->addAttrib(nbo, 1, 3, GL_FLOAT, 3 * sizeof(float));
+  mesh.normals.clear();
+  mesh.vertices.clear();
+  mesh.normals.shrink_to_fit();
+  mesh.vertices.shrink_to_fit();
 }
+
+void pf::mc::Chunk::createMesh() {
+  if (geometryGenerated) {
+    return;
+  }
+  geometryGenerated = true;
+  //log("updating chunk at {}x{}x{}", position.x, position.y, position.z); FIXME need to sync log with main thread
+
+  mesh = generateGeometry();
+  vertexCount = mesh.vertices.size();
+  //log("generated {} vertices", vertexCount); FIXME need to sync log with main thread
+}
+
 
 void pf::mc::Chunk::render() {
   update();
@@ -57,6 +71,7 @@ void pf::mc::Chunk::setVoxel(std::size_t x, std::size_t y, std::size_t z, pf::mc
   assert(x < CHUNK_LEN && y < CHUNK_LEN && z < CHUNK_LEN);
   const auto voxelIndex = index3Dto1D(x, y, z);
   voxels[voxelIndex].type = type;
+  setChanged();
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
@@ -215,6 +230,7 @@ bool pf::mc::Chunk::isVoxelFilled(std::size_t index) const {
 
 void pf::mc::Chunk::setChanged() {
   changed = true;
+  geometryGenerated = false;
 }
 
 const glm::ivec3 &pf::mc::Chunk::getPosition() const {

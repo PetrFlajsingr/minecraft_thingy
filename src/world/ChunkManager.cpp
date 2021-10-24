@@ -12,6 +12,10 @@ pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance
                                                                                                  noiseGenerator(seed) {
 }
 
+pf::mc::ChunkManager::~ChunkManager() {
+  loadingThreadPool.cancelAndStop();
+}
+
 void pf::mc::ChunkManager::resetWithSeed(double seed) {
   chunks.clear();
   emptyChunks.clear();
@@ -22,18 +26,35 @@ void pf::mc::ChunkManager::resetWithSeed(double seed) {
 void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
   unloadDistantChunks(cameraPosition);
   const auto newChunkPositions = getAllChunksToGenerate(cameraPosition);
+
+  using ChunkResultPair = std::pair<Chunk *, glm::ivec3>;
+  using FutureReturnType = std::future<ChunkResultPair>;
+  std::vector<FutureReturnType> futures{};
   for (const auto &position : newChunkPositions) {
     if (std::ranges::find(emptyChunks, position) != std::ranges::end(emptyChunks)) {
       continue;
     }
     if (chunks.size() >= chunkLimit) { break; }
-    auto newChunk = std::make_unique<Chunk>(position, noiseGenerator);
-    newChunk->update();
-    if (newChunk->getVertexCount() == 0) {
-      emptyChunks.emplace_back(newChunk->getPosition());
-      continue;
+    // creating the chunk outside thread because it creates buffers
+    auto newChunk = new Chunk(position, noiseGenerator);// FIXME only using new here 'cause no time and MSVC template errors really suck
+    futures.emplace_back(
+        loadingThreadPool.enqueue([position, this, newChunk]() -> ChunkResultPair {
+          newChunk->createMesh();
+          if (newChunk->getVertexCount() == 0) {
+            delete newChunk;// FIXME only using delete here 'cause no time and MSVC template errors really suck
+            return {nullptr, position};
+          }
+          return {newChunk, position};
+        }));
+  }
+  for (auto &future : futures) {
+    const auto &[newChunk, position] = std::move(future.get());
+    if (newChunk == nullptr) {
+      emptyChunks.emplace_back(position);
+      delete newChunk;// FIXME only using delete here 'cause no time and MSVC template errors really suck
+    } else {
+      chunks.push_back(std::unique_ptr<Chunk>(newChunk));
     }
-    chunks.emplace_back(std::move(newChunk));
   }
 }
 
