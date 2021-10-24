@@ -37,6 +37,9 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   void render() override;
 
+  [[nodiscard]] double getWorldSeed() const;
+  void setWorldSeed(double seed);
+
   void setLightDir(const glm::vec3 &lightDir);
 
   void setWireframe(bool wireframe);
