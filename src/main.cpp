@@ -92,6 +92,7 @@ int main(int argc, char *argv[]) {
     if (cameraMoveEnabled) {
       camera->ProcessMouseMovement(deltaX, -deltaY);
       ui.setCameraDirectionText(camera->Front);
+      renderer.userMouseMove();
     }
   });
   mainWindow.setKeyCallback([&](KeyEventType type, pf::Flags<ModifierKey> mods, char key) {
@@ -132,6 +133,9 @@ int main(int argc, char *argv[]) {
   ui.frustumCullingCheckbox->addValueListener([&](bool enabled) {
     renderer.setShowFrustumCulling(enabled);
   });
+  ui.addVoxelBtn->addValueListener([&](bool enabled) {
+    renderer.setDrawOutline(enabled);
+  }, true);
 
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};

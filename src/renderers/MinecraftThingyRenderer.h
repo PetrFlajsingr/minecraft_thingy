@@ -27,12 +27,15 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   std::optional<std::string> init() override;
   void userMouseDown();
   void userMouseUp();
+  void userMouseMove();
   void render() override;
 
   void setLightDir(const glm::vec3 &lightDir);
 
   void setWireframe(bool wireframe);
   void setShowFrustumCulling(bool showFrustumCulling);
+
+  void setDrawOutline(bool drawOutline);
 
  private:
   glm::ivec3 getLookedAtCoordinatesFromDepth() const;
@@ -52,6 +55,18 @@ class MinecraftThingyRenderer : public ogl::Renderer {
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;
   std::shared_ptr<Program> program;
+
+  std::shared_ptr<Shader> vertexBoxShader;
+  std::shared_ptr<Shader> geometryBoxShader;
+  std::shared_ptr<Shader> fragmentBoxShader;
+  std::shared_ptr<Program> boxProgram;
+
+  std::shared_ptr<Buffer> boxBuffer;
+  std::shared_ptr<VertexArray> boxVao;
+
+  bool drawOutline = false;
+  std::optional<glm::ivec3> outlinePosition;
+
   std::size_t windowWidth;
   std::size_t windowHeight;
 };

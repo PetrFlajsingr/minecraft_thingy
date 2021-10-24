@@ -128,9 +128,8 @@ std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 c
 
 pf::mc::Chunk *pf::mc::ChunkManager::chunkForCoords(glm::ivec3 coords) const {
   for (const auto &chunk : *chunks.readOnlyAccess()) {
-    auto chunkAABB = chunk->getAABB();
-    chunkAABB.p2 -= 1.f;
-    if (chunk->getAABB().contains(coords)) {
+    const auto diff = coords - chunk->getPosition();
+    if (diff.x < CHUNK_LEN && diff.y < CHUNK_LEN && diff.z < CHUNK_LEN) {
       return chunk.get();
     }
   }
@@ -158,7 +157,7 @@ std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay
       } else if (previousPosition.z > rayPosition.z) {
         result.face = Direction::Backward;
       } else if (previousPosition.z < rayPosition.z) {
-        result.face = Direction::Forward; // might need to switch these up
+        result.face = Direction::Forward;// might need to switch these up
       }
       return result;
     }
