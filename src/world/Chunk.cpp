@@ -72,6 +72,7 @@ void pf::mc::Chunk::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
   const auto voxelIndex = index3Dto1D(coords.x, coords.y, coords.z);
   voxels[voxelIndex].type = type;
   setChanged();
+  modified = true;
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
@@ -247,4 +248,7 @@ pf::math::BoundingBox<3> pf::mc::Chunk::getAABB() const {
 
 std::size_t pf::mc::Chunk::getVertexCount() const {
   return vertexCount;
+}
+bool pf::mc::Chunk::isModified() const {
+  return modified;
 }

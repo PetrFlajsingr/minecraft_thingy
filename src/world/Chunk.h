@@ -38,6 +38,8 @@ class Chunk {
   [[nodiscard]] bool isVoxelFilled(std::size_t x, std::size_t y, std::size_t z) const;
   [[nodiscard]] bool isVoxelFilled(std::size_t index) const;
 
+  [[nodiscard]] bool isModified() const;
+
  private:
   void generateVoxelData(const NoiseGenerator &noiseGenerator);
 
@@ -59,6 +61,8 @@ class Chunk {
   bool changed;
   bool geometryGenerated = false;
   GeometryData mesh;
+
+  bool modified = false;
 };
 
 }

@@ -19,6 +19,7 @@ pf::mc::ChunkManager::~ChunkManager() {
 void pf::mc::ChunkManager::resetWithSeed(double seed) {
   chunks.writeAccess()->clear();
   emptyChunks.writeAccess()->clear();
+  hiddenModifiedChunks.clear();
   ChunkManager::seed = seed;
   noiseGenerator.setSeed(seed);
 }
@@ -30,6 +31,12 @@ void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
   for (const auto &position : newChunkPositions) {
     auto emptyChunksAccess = emptyChunks.readOnlyAccess();
     if (std::ranges::find(*emptyChunksAccess, position) != std::ranges::end(*emptyChunksAccess)) {
+      continue;
+    }
+    if (auto iter = std::ranges::find_if(hiddenModifiedChunks, [position](const auto &chunk) { return chunk->getPosition() == position; });
+        iter != hiddenModifiedChunks.end()) {
+      chunks.writeAccess()->emplace_back(std::move(*iter));
+      hiddenModifiedChunks.erase(iter);
       continue;
     }
     // creating the chunk outside thread because it creates buffers
@@ -92,9 +99,17 @@ std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::m
   return result;
 }
 void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
-  auto chunksAccess = chunks.writeAccess();
-  auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
+  const auto shouldUnload = [&] (const auto &chunk) {
     return glm::distance(chunk->getCenter(), cameraPosition) > renderDistance;
+  };
+  auto chunksAccess = chunks.writeAccess();
+  for (auto &chunk : *chunksAccess) {
+    if (shouldUnload(chunk) && chunk->isModified()) {
+      hiddenModifiedChunks.emplace_back(std::move(chunk));
+    }
+  }
+  auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
+    return chunk == nullptr || shouldUnload(chunk) ;
   });
   if (!toRemove.empty()) {
     log("Unloading {} chunks", toRemove.size());
@@ -107,6 +122,7 @@ double pf::mc::ChunkManager::getSeed() const {
   return seed;
 }
 
+// TODO: load only chunks on edges
 std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 cameraPosition) const {
   std::vector<glm::ivec3> result{};
   auto min = glm::ivec3{cameraPosition - static_cast<float>(renderDistance)};
