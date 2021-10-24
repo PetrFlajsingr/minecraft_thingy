@@ -1,5 +1,4 @@
 # TODO
-* move first chunk load to threadpool
 * voxel construction/destruction
   * grip snapping
   * wireframe preview
