@@ -47,13 +47,13 @@ pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path s
 }
 
 std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
-  const auto vertexShaderSrc = readFile(shaderDir / "mvp_tex_passthrough.vert");
+  const auto vertexShaderSrc = readFile(shaderDir / "terrain_mesh.vert");
   if (!vertexShaderSrc.has_value()) {
-    return "Could not load 'mvp_tex_passthrough.vert'";
+    return "Could not load 'terrain_mesh.vert'";
   }
-  const auto fragmentShaderSrc = readFile(shaderDir / "mvp_tex_passthrough.frag");
+  const auto fragmentShaderSrc = readFile(shaderDir / "terrain_mesh.frag");
   if (!fragmentShaderSrc.has_value()) {
-    return "Could not load 'mvp_tex_passthrough.frag'";
+    return "Could not load 'terrain_mesh.frag'";
   }
   vertexShader = std::make_shared<Shader>(GL_VERTEX_SHADER, vertexShaderSrc.value());
   fragmentShader = std::make_shared<Shader>(GL_FRAGMENT_SHADER, fragmentShaderSrc.value());
