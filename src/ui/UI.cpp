@@ -23,18 +23,22 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   appMenuBar = &imguiInterface->getMenuBar();
   fileSubMenu = &appMenuBar->addSubmenu("file_submenu", ICON_FA_FILE_ALT " File");
   cameraWindow = &imguiInterface->createWindow("camera_window", "Camera");
+  cameraWindow->setIsDockable(true);
   camWindowLayout = &cameraWindow->createChild<BoxLayout>("cam_window_layout", LayoutDirection::TopToBottom, Size::Auto(), AllowCollapse::No, Persistent::Yes);
   camPosLabel = &camWindowLayout->createChild<Text>("cam_pos_label", "Camera position: 0.0000x0.0000x0.0000");
   camDirLabel = &camWindowLayout->createChild<Text>("cam_dir_label", "Camera direction: 0.0000x0.0000x1.0000");
   moveToOriginButton = &camWindowLayout->createChild<Button>("move_origin_btn", "Move to origin");
   showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe", false, Persistent::Yes);
   clipCheckbox = &camWindowLayout->createChild<Checkbox>("clip_checkbox", "Clip - not implemented", true, Persistent::Yes);
+  frustumCullingCheckbox = &camWindowLayout->createChild<Checkbox>("frustum_culling_checkbox", "Show frustum culling", false, Persistent::Yes);
 
   logWindow = &imguiInterface->createWindow("log_window", "Log");
   logMemo = &logWindow->createChild<Memo>("log_memo", "Log");
+  logWindow->setIsDockable(true);
 
   lightingWindow = &imguiInterface->createWindow("lighting_window", "Lighting");
   lightPosSlider = &lightingWindow->createChild<Slider<glm::vec3>>("light_pos_slider", "Light pos", -1.0, 1.0, glm::vec3{0, 1, 0}, Persistent::Yes);
+  lightingWindow->setIsDockable(true);
 
   infoWindow = &imguiInterface->createWindow("info_window", "Info");
   fpsCurrentPlot = &infoWindow->createChild<SimplePlot>("fps_plot", "Fps current", PlotType::Lines,
@@ -44,6 +48,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
                                                         std::vector<float>{}, std::nullopt, 200, 0, FLT_MAX,
                                                         Size{Width::Auto(), 30});
   fpsLabel = &infoWindow->createChild<Text>("fps_label", "Average FPS: {}");
+  infoWindow->setIsDockable(true);
 
   imguiInterface->setStateFromConfig();
 }

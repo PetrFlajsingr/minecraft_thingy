@@ -5,25 +5,32 @@
 #ifndef OPENGL_TEMPLATE_SRC_WORLD_CHUNK_H
 #define OPENGL_TEMPLATE_SRC_WORLD_CHUNK_H
 
+#include "Voxel.h"
+#include <array>
 #include <geGL/Buffer.h>
 #include <geGL/VertexArray.h>
-#include <array>
 #include <noise/NoiseGenerator.h>
-#include "Voxel.h"
+#include <pf_common/math/BoundingBox.h>
 
 namespace pf::mc {
 
-constexpr static std::size_t CHUNK_LEN = 64;
+constexpr static std::size_t CHUNK_LEN = 16;
 constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 
 class Chunk {
  public:
-  Chunk(glm::vec3 position, const NoiseGenerator &noiseGenerator);
+  Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator);
 
   void setChanged();
 
   void update();
+  void createMesh();
   void render();
+
+  [[nodiscard]] const glm::ivec3 &getPosition() const;
+  [[nodiscard]] const glm::vec3 &getCenter() const;
+  [[nodiscard]] math::BoundingBox<3> getAABB() const;
+  [[nodiscard]] std::size_t getVertexCount() const;
 
   [[nodiscard]] Voxel getVoxel(std::size_t x, std::size_t y, std::size_t z) const;
   void setVoxel(std::size_t x, std::size_t y, std::size_t z, Voxel::Type type);
@@ -47,8 +54,11 @@ class Chunk {
   std::shared_ptr<Buffer> nbo;
   std::shared_ptr<VertexArray> vao;
   std::size_t vertexCount = 0;
-  glm::vec3 position;
+  glm::ivec3 position;
+  glm::vec3 center;
   bool changed;
+  bool geometryGenerated = false;
+  GeometryData mesh;
 };
 
 }

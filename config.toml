@@ -3,6 +3,13 @@ width = 1800
 height = 1200
 title = "OpenGL"
 
+[camera]
+position = [ 0.0, 40.0, 0.0 ]
+
+[chunks]
+max_limit = 32
+render_distance = 30
+
 [files]
 resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
 

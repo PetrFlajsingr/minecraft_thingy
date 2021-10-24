@@ -7,10 +7,12 @@ out vec4 fragCoord;
 out vec3 normal;
 
 uniform mat4 mvp;
+uniform vec3 chunkPosition;
 
 
 void main() {
-    gl_Position = mvp * vec4(inCoord.xyz, 1);
-    fragCoord = inCoord;
+    vec4 coord = vec4(inCoord.xyz + chunkPosition, inCoord.w);
+    gl_Position = mvp * vec4(coord.xyz, 1);
+    fragCoord = coord;
     normal = inNormal;
 }

@@ -12,7 +12,7 @@ class NoiseGenerator {
  public:
   virtual ~NoiseGenerator() = default;
 
-  virtual void setSeed(std::uint32_t seed) = 0;
+  virtual void setSeed(double seed) = 0;
   [[nodiscard]] virtual double noise(glm::vec3 coord) const = 0;
 };
 }
