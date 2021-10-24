@@ -11,6 +11,7 @@
 #include <geGL/VertexArray.h>
 #include <noise/NoiseGenerator.h>
 #include <pf_common/math/BoundingBox.h>
+#include <pf_common/concepts/Serializable.h>
 
 namespace pf::mc {
 
@@ -20,6 +21,7 @@ constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 class Chunk {
  public:
   Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator);
+  Chunk(const std::vector<std::byte> &data);
 
   void setChanged();
 
@@ -39,6 +41,8 @@ class Chunk {
   [[nodiscard]] bool isVoxelFilled(std::size_t index) const;
 
   [[nodiscard]] bool isModified() const;
+
+  [[nodiscard]] std::vector<std::byte> serialize() const;
 
  private:
   void generateVoxelData(const NoiseGenerator &noiseGenerator);
@@ -64,6 +68,7 @@ class Chunk {
 
   bool modified = false;
 };
+static_assert(Serializable<Chunk>);
 
 }
 

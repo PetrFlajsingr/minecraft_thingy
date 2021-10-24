@@ -4,6 +4,7 @@
 
 #include "Chunk.h"
 #include <fmt/core.h>
+#include <pf_common/bin.h>
 #include <log.h>
 
 pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
@@ -13,6 +14,17 @@ pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) 
                                                                                  position(position),
                                                                                  center(glm::vec3{position} + CHUNK_LEN / 2.0f) {
   generateVoxelData(noiseGenerator);
+}
+
+pf::mc::Chunk::Chunk(const std::vector<std::byte> &data) : changed(true),
+                                                           vbo(std::make_shared<Buffer>()),
+                                                           nbo(std::make_shared<Buffer>()),
+                                                           vao(std::make_shared<VertexArray>()) {
+  constexpr auto positionSize =  sizeof(decltype(position));
+  position = fromBytes<decltype(position)>(std::span{data.begin(), data.begin() + positionSize});
+  center = glm::vec3{position} + CHUNK_LEN / 2.0f;
+  const auto voxelSpan = std::span{reinterpret_cast<const Voxel*>(data.data() + positionSize), (data.size() - positionSize) / sizeof(Voxel)};
+  std::ranges::copy(voxelSpan, voxels.begin());
 }
 
 void pf::mc::Chunk::update() {
@@ -249,6 +261,17 @@ pf::math::BoundingBox<3> pf::mc::Chunk::getAABB() const {
 std::size_t pf::mc::Chunk::getVertexCount() const {
   return vertexCount;
 }
+
 bool pf::mc::Chunk::isModified() const {
   return modified;
+}
+
+std::vector<std::byte> pf::mc::Chunk::serialize() const {
+  std::vector<std::byte> result{toBytes(position)};
+  result.reserve(CHUNK_SIZE * sizeof(Voxel) + sizeof(decltype(position)));
+  std::ranges::for_each(voxels, [&result](const auto &voxel) {
+    const auto voxelBytes = toBytes(voxel);
+    result.insert(result.end(), voxelBytes.begin(), voxelBytes.end());
+  });
+  return result;
 }
