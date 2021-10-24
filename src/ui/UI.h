@@ -5,11 +5,15 @@
 #ifndef MINECRAFT_THINGY_SRC_UI_UI_H
 #define MINECRAFT_THINGY_SRC_UI_UI_H
 
+#include <world/Voxel.h>
 #include <pf_imgui/ImGuiInterface.h>
 #include <pf_imgui/elements.h>
 #include <pf_imgui/layouts/layouts.h>
 #include <pf_imgui/elements/plots/SimplePlot.h>
 #include <GLFW/glfw3.h>
+#include <pf_common/enums.h>
+
+ENABLE_PF_ENUM_OUT_FOR_NAMESPACE(pf::mc)
 
 namespace pf::mc {
 struct UI {
@@ -41,6 +45,11 @@ struct UI {
     ui::ig::SimplePlot *fpsCurrentPlot;
     ui::ig::SimplePlot *fpsAveragePlot;
     ui::ig::Text *fpsLabel;
+  ui::ig::Window *controlsWindow;
+    ui::ig::RadioGroup *destroyAddRadioGroup;
+      ui::ig::RadioButton *addVoxelBtn;
+      ui::ig::RadioButton *destroyVoxelBtn;
+    ui::ig::Combobox<Voxel::Type> *voxelTypeCombobox;
 
   // clang-format on
 

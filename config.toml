@@ -1,8 +1,3 @@
-[window]
-width = 1800
-height = 1200
-title = "OpenGL"
-
 [camera]
 position = [ 0.0, 40.0, 0.0 ]
 
@@ -15,3 +10,25 @@ resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
 
 [imgui]
 path_icons = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources\icons'
+
+[imgui.cam_window_layout]
+collapsed = false
+
+[imgui.clip_checkbox]
+checked = true
+
+[imgui.combobox_vox_type]
+
+[imgui.frustum_culling_checkbox]
+checked = false
+
+[imgui.light_pos_slider]
+value = [ 0.652999997138977, -1.0, 0.0 ]
+
+[imgui.wireframe_checkbox]
+checked = false
+
+[window]
+height = 1200
+title = 'OpenGL'
+width = 1800

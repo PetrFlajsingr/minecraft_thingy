@@ -50,6 +50,20 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   fpsLabel = &infoWindow->createChild<Text>("fps_label", "Average FPS: {}");
   infoWindow->setIsDockable(true);
 
+  controlsWindow = &imguiInterface->createWindow("controls_window", "Controls");
+  controlsWindow->setIsDockable(true);
+  destroyAddRadioGroup = &controlsWindow->createChild<RadioGroup>("radio_group_add_destroy", "Voxel interaction");
+  addVoxelBtn = &destroyAddRadioGroup->addButton("btn_add_vox", "Add");
+  destroyVoxelBtn = &destroyAddRadioGroup->addButton("btn_destroy_vox", "Destroy");
+  addVoxelBtn->setValue(true);
+  voxelTypeCombobox = &controlsWindow->createChild<Combobox<Voxel::Type>>("combobox_vox_type",
+                                                                          "Voxel type",
+                                                                          "Select voxel type",
+                                                                          magic_enum::enum_values<Voxel::Type>(),
+                                                                          ComboBoxCount::Items8,
+                                                                          Persistent::Yes);
+  voxelTypeCombobox->setSelectedItem(Voxel::Type::Dirt);
+
   imguiInterface->setStateFromConfig();
 }
 

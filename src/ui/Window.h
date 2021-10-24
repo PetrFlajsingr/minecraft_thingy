@@ -6,10 +6,12 @@
 #define OPENGL_TEMPLATE_SRC_UI_WINDOW_H
 
 #include <GLFW/glfw3.h>
+#include <chrono>
 #include <concepts>
 #include <functional>
 #include <optional>
 #include <pf_common/enums.h>
+#include <queue>
 #include <string>
 
 namespace pf::ogl {
@@ -123,6 +125,15 @@ class Window {
     tasks.emplace_back(std::forward<decltype(task)>(task));
   }
 
+  void enqueueDelayedTask(std::invocable auto &&task, std::chrono::milliseconds delay) {
+    const auto execTime = std::chrono::steady_clock::now() + delay;
+    eventQueue.emplace(
+        [c = std::forward<decltype(task)>(task)] {
+          c();
+        },
+        execTime);
+  }
+
  private:
   static void windowSizeCallback(GLFWwindow *window, int width, int height);
   std::function<void(std::size_t, std::size_t)> resizeUserCallback = [](auto, auto) {};
@@ -155,6 +166,21 @@ class Window {
   GLFWwindow *windowHandle = nullptr;
 
   std::vector<std::function<void()>> tasks{};
+
+  struct DelayEvent {
+    static inline auto IdGenerator = 0;
+    inline DelayEvent(std::function<void()> fnc, const std::chrono::steady_clock::time_point &execTime)
+        : fnc(std::move(fnc)), execTime(execTime) {}
+    std::function<void()> fnc;
+    std::chrono::steady_clock::time_point execTime;
+    std::size_t id = ++IdGenerator;
+    inline bool operator<(const DelayEvent &rhs) const {
+      return execTime < rhs.execTime && id < rhs.id;
+    }
+
+    inline void operator()() const { fnc(); }
+  };
+  std::priority_queue<DelayEvent, std::vector<DelayEvent>, std::less<>> eventQueue;
 };
 
 namespace details {

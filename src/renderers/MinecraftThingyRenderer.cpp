@@ -38,10 +38,15 @@ pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path s
   blockTextureAtlas->texParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   blockTextureAtlas->texParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   blockTextureAtlas->setData2D(stbImage.get());
+
+  boxBuffer = std::make_shared<Buffer>();
+  glm::vec3 p{0, 0, 0};
+  boxBuffer->alloc(sizeof(glm::vec3), &p, GL_STATIC_DRAW);
+  boxVao = std::make_shared<VertexArray>();
+  boxVao->addAttrib(boxBuffer, 0, 3, GL_FLOAT, sizeof(glm::vec3));
 }
 
 std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
-
   const auto vertexShaderSrc = readFile(shaderDir / "mvp_tex_passthrough.vert");
   if (!vertexShaderSrc.has_value()) {
     return "Could not load 'mvp_tex_passthrough.vert'";
@@ -54,6 +59,23 @@ std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
   fragmentShader = std::make_shared<Shader>(GL_FRAGMENT_SHADER, fragmentShaderSrc.value());
 
   program = std::make_shared<Program>(vertexShader, fragmentShader);
+
+  const auto vertexBoxShaderSrc = readFile(shaderDir / "cube_render.vert");
+  if (!vertexBoxShaderSrc.has_value()) {
+    return "Could not load 'cube_render.vert'";
+  }
+  const auto geometryBoxShaderSrc = readFile(shaderDir / "cube_render.geom");
+  if (!geometryBoxShaderSrc.has_value()) {
+    return "Could not load 'cube_render.geom'";
+  }
+  const auto fragmentBoxShaderSrc = readFile(shaderDir / "cube_render.frag");
+  if (!fragmentBoxShaderSrc.has_value()) {
+    return "Could not load 'cube_render.vert'";
+  }
+  vertexBoxShader = std::make_shared<Shader>(GL_VERTEX_SHADER, vertexBoxShaderSrc.value());
+  geometryBoxShader = std::make_shared<Shader>(GL_GEOMETRY_SHADER, geometryBoxShaderSrc.value());
+  fragmentBoxShader = std::make_shared<Shader>(GL_FRAGMENT_SHADER, fragmentBoxShaderSrc.value());
+  boxProgram = std::make_shared<Program>(vertexBoxShader, geometryBoxShader, fragmentBoxShader);
 
   return std::nullopt;
 }
@@ -84,6 +106,19 @@ void pf::mc::MinecraftThingyRenderer::render() {
     program->set3fv("chunkPosition", &glm::vec3{chunk->getPosition()}[0]);
     chunk->render();
   }
+
+  if (drawOutline && outlinePosition.has_value()) {
+    glDisable(GL_CULL_FACE); // wrong order in geom shader
+    //boxBuffer->setData(&*outlinePosition);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    boxProgram->use();
+    boxProgram->setMatrix4fv("mvp", &mvp[0][0]);
+    boxProgram->set1f("sideLen", 1.1f);
+    const auto pos = glm::vec3{*outlinePosition};
+    boxProgram->set3fv("hack", &pos[0]);
+    boxVao->bind();
+    glDrawArrays(GL_POINTS, 0, 1);
+  }
 }
 
 void pf::mc::MinecraftThingyRenderer::setLightDir(const glm::vec3 &lightDir) {
@@ -98,28 +133,6 @@ void pf::mc::MinecraftThingyRenderer::setShowFrustumCulling(bool showFrustumCull
   MinecraftThingyRenderer::showFrustumCulling = showFrustumCulling;
 }
 
-void pf::mc::MinecraftThingyRenderer::userMouseDown() {
-  log("Mouse down");
-  //const auto coords = getLookedAtCoordinatesFromDepth();
-  const auto coords = chunkManager.castRay(camera->Position, camera->Front);
-  if (!coords.has_value()) {
-    return;
-  }
-  log("Coords: {}x{}x{}, direction: {}", coords->coords.x, coords->coords.y, coords->coords.z, magic_enum::enum_name(coords->face));
-}
-
-void pf::mc::MinecraftThingyRenderer::userMouseUp() {
-  log("Mouse up");
-  //const auto coords = getLookedAtCoordinatesFromDepth();
-  //chunkManager.setVoxel(coords, Voxel::Type::Empty);
-  const auto coords = chunkManager.castRay(camera->Position, camera->Front);
-  if (!coords.has_value()) {
-    return;
-  }
-  chunkManager.setVoxel(coords->coords, Voxel::Type::Gravel);
-  log("Coords: {}x{}x{}, direction: {}", coords->coords.x, coords->coords.y, coords->coords.z, magic_enum::enum_name(coords->face));
-}
-
 glm::ivec3 pf::mc::MinecraftThingyRenderer::getLookedAtCoordinatesFromDepth() const {
   float depth;
   glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
@@ -131,4 +144,59 @@ glm::ivec3 pf::mc::MinecraftThingyRenderer::getLookedAtCoordinatesFromDepth() co
 
 glm::mat4 pf::mc::MinecraftThingyRenderer::getProjectionMatrix() const {
   return glm::perspective(glm::radians(90.0f), 4.0f / 3, 0.1f, 1000.f);
+}
+
+void pf::mc::MinecraftThingyRenderer::setDrawOutline(bool drawOutline) {
+  MinecraftThingyRenderer::drawOutline = drawOutline;
+}
+
+void pf::mc::MinecraftThingyRenderer::userMouseMove() {
+  reloadOutlineInfo();
+}
+
+void  pf::mc::MinecraftThingyRenderer::userDestroy() {
+  const auto castResult = chunkManager.castRay(camera->Position, camera->Front);
+  if (castResult.has_value()) {
+    chunkManager.setVoxel(castResult->coords, Voxel::Type::Empty);
+    reloadOutlineInfo();
+  }
+}
+
+void  pf::mc::MinecraftThingyRenderer::userBuild(pf::mc::Voxel::Type type) {
+  if (outlinePosition.has_value()) {
+    chunkManager.setVoxel(*outlinePosition, type);
+    reloadOutlineInfo();
+  }
+}
+
+void pf::mc::MinecraftThingyRenderer::setOutlineType(pf::mc::Outline outlineType) {
+  MinecraftThingyRenderer::outlineType = outlineType;
+}
+
+std::optional<pf::mc::Voxel> pf::mc::MinecraftThingyRenderer::getActiveVoxel() const {
+  if (!outlinePosition.has_value()) {
+    return std::nullopt;
+  }
+  return chunkManager.getVoxel(outlinePosition.value());
+}
+
+void pf::mc::MinecraftThingyRenderer::reloadOutlineInfo() {
+  if (drawOutline) {
+    const auto castResult = chunkManager.castRay(camera->Position, camera->Front);
+    if (castResult.has_value()) {
+      outlinePosition = castResult->coords;
+      if (outlineType == Outline::Neighbor) {
+        switch (castResult->face) {
+          case Direction::Up: outlinePosition->y += 1; break;
+          case Direction::Down: outlinePosition->y -= 1; break;
+          case Direction::Left: outlinePosition->x -= 1; break;
+          case Direction::Right: outlinePosition->x += 1; break;
+          case Direction::Forward: outlinePosition->z -= 1; break;
+          case Direction::Backward: outlinePosition->z += 1; break;
+        }
+      }
+    } else {
+      outlinePosition = std::nullopt;
+    }
+  }
 }

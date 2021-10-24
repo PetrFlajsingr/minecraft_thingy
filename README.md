@@ -1,7 +1,4 @@
 # TODO
-* voxel construction/destruction
-  * grip snapping
-  * wireframe preview
-  * different destruction time per type
+* seed controls
 * save/load world
 * write up short paper

@@ -6,9 +6,9 @@
 #include <fmt/format.h>
 #include <log.h>
 #include <magic_enum.hpp>
+#include <pf_imgui/serialization.h>
 #include <toml++/toml.h>
 #include <ui/Window.h>
-#include <pf_imgui/serialization.h>
 
 /**
  * Load toml config located next to the exe - config.toml
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
   camera->Position = ui::ig::deserializeGlmVec<glm::vec3>(*config["camera"]["position"].as_array());
   camera->MovementSpeed = camera->MovementSpeed * 10;
   bool cameraMoveEnabled = false;
+  bool destructionActive = false;
   double frameTime = 0.0;// hack
   const auto renderDistance = config["chunks"]["render_distance"].value<double>().value();
   const auto chunkLimit = config["chunks"]["max_limit"].value<std::size_t>().value();
@@ -76,15 +77,38 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-
+  bool destructionInProgress = false;
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
     if (button == MouseButton::Right) {
       cameraMoveEnabled = type == MouseEventType::Down;
     }
     if (button == MouseButton::Left && cameraMoveEnabled) {
-      switch(type) {
-        case MouseEventType::Down: renderer.userMouseDown(); break;
-        case MouseEventType::Up: renderer.userMouseUp(); break;
+      switch (type) {
+        case MouseEventType::Down:
+          if (destructionActive) {
+            if (const auto voxel = renderer.getActiveVoxel(); voxel.has_value()) {
+              destructionInProgress = true;
+              mainWindow.enqueueDelayedTask(
+                  [&destructionInProgress, &renderer] {
+                    log("delayed destruct");
+                    if (destructionInProgress) {
+                      log("destroying");
+                      renderer.userDestroy();
+                    } else {
+                      log("not destroying");
+                    }
+                  },
+                  voxel->getDestructionTime());
+            }
+          }
+          break;
+        case MouseEventType::Up:
+          if (destructionActive) {
+            destructionInProgress = false;
+          } else {
+            renderer.userBuild(ui.voxelTypeCombobox->getValue());
+          }
+          break;
       }
     }
   });
@@ -92,6 +116,7 @@ int main(int argc, char *argv[]) {
     if (cameraMoveEnabled) {
       camera->ProcessMouseMovement(deltaX, -deltaY);
       ui.setCameraDirectionText(camera->Front);
+      renderer.userMouseMove();
     }
   });
   mainWindow.setKeyCallback([&](KeyEventType type, pf::Flags<ModifierKey> mods, char key) {
@@ -128,10 +153,18 @@ int main(int argc, char *argv[]) {
                                       true);
   ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
     renderer.setWireframe(enabled);
-  });
+  },
+                                             true);
   ui.frustumCullingCheckbox->addValueListener([&](bool enabled) {
     renderer.setShowFrustumCulling(enabled);
-  });
+  },
+                                              true);
+  renderer.setDrawOutline(true);
+  ui.addVoxelBtn->addValueListener([&](bool enabled) {
+    destructionActive = !enabled;
+    renderer.setOutlineType(destructionActive ? mc::Outline::Voxel : mc::Outline::Neighbor);
+  },
+                                   true);
 
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};
