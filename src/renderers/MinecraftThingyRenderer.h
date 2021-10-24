@@ -15,9 +15,9 @@
 namespace pf::mc {
 
 enum class Outline {
-  Voxel, Neighbor
+  Voxel,
+  Neighbor
 };
-
 
 class MinecraftThingyRenderer : public ogl::Renderer {
  public:
@@ -44,6 +44,8 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   void setDrawOutline(bool drawOutline);
   void setOutlineType(Outline outlineType);
+
+  [[nodiscard]] std::optional<Voxel> getActiveVoxel() const;
 
  private:
   glm::ivec3 getLookedAtCoordinatesFromDepth() const;

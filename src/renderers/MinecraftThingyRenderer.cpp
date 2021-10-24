@@ -145,9 +145,11 @@ glm::ivec3 pf::mc::MinecraftThingyRenderer::getLookedAtCoordinatesFromDepth() co
 glm::mat4 pf::mc::MinecraftThingyRenderer::getProjectionMatrix() const {
   return glm::perspective(glm::radians(90.0f), 4.0f / 3, 0.1f, 1000.f);
 }
+
 void pf::mc::MinecraftThingyRenderer::setDrawOutline(bool drawOutline) {
   MinecraftThingyRenderer::drawOutline = drawOutline;
 }
+
 void pf::mc::MinecraftThingyRenderer::userMouseMove() {
   reloadOutlineInfo();
 }
@@ -166,9 +168,18 @@ void  pf::mc::MinecraftThingyRenderer::userBuild(pf::mc::Voxel::Type type) {
     reloadOutlineInfo();
   }
 }
+
 void pf::mc::MinecraftThingyRenderer::setOutlineType(pf::mc::Outline outlineType) {
   MinecraftThingyRenderer::outlineType = outlineType;
 }
+
+std::optional<pf::mc::Voxel> pf::mc::MinecraftThingyRenderer::getActiveVoxel() const {
+  if (!outlinePosition.has_value()) {
+    return std::nullopt;
+  }
+  return chunkManager.getVoxel(outlinePosition.value());
+}
+
 void pf::mc::MinecraftThingyRenderer::reloadOutlineInfo() {
   if (drawOutline) {
     const auto castResult = chunkManager.castRay(camera->Position, camera->Front);

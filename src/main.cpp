@@ -77,16 +77,34 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  bool destructionInProgress = false;
   mainWindow.setMouseButtonCallback([&](MouseEventType type, MouseButton button, double, double) {
     if (button == MouseButton::Right) {
       cameraMoveEnabled = type == MouseEventType::Down;
     }
     if (button == MouseButton::Left && cameraMoveEnabled) {
       switch (type) {
-        case MouseEventType::Down: break;
+        case MouseEventType::Down:
+          if (destructionActive) {
+            if (const auto voxel = renderer.getActiveVoxel(); voxel.has_value()) {
+              destructionInProgress = true;
+              mainWindow.enqueueDelayedTask(
+                  [&destructionInProgress, &renderer] {
+                    log("delayed destruct");
+                    if (destructionInProgress) {
+                      log("destroying");
+                      renderer.userDestroy();
+                    } else {
+                      log("not destroying");
+                    }
+                  },
+                  voxel->getDestructionTime());
+            }
+          }
+          break;
         case MouseEventType::Up:
           if (destructionActive) {
-            renderer.userDestroy();
+            destructionInProgress = false;
           } else {
             renderer.userBuild(ui.voxelTypeCombobox->getValue());
           }
@@ -135,10 +153,12 @@ int main(int argc, char *argv[]) {
                                       true);
   ui.showWireframeCheckbox->addValueListener([&](bool enabled) {
     renderer.setWireframe(enabled);
-  }, true);
+  },
+                                             true);
   ui.frustumCullingCheckbox->addValueListener([&](bool enabled) {
     renderer.setShowFrustumCulling(enabled);
-  }, true);
+  },
+                                              true);
   renderer.setDrawOutline(true);
   ui.addVoxelBtn->addValueListener([&](bool enabled) {
     destructionActive = !enabled;

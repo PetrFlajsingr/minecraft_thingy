@@ -60,6 +60,11 @@ void pf::ogl::Window::show() {
     if (closed) {
       break;
     }
+    const auto currTime = std::chrono::steady_clock::now();
+    while (!eventQueue.empty() && eventQueue.top().execTime <= currTime) {
+      eventQueue.top()();
+      eventQueue.pop();
+    }
     const auto time = glfwGetTime();
     const auto timeElapsed = time - startTime;
     mainLoop(timeElapsed);
