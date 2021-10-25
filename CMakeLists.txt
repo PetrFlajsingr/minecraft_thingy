@@ -73,7 +73,7 @@ add_executable(minecraft_thingy
         src/noise/PerlinNoiseGenerator.h src/noise/PerlinNoiseGenerator.cpp src/log.h
         src/utils/Direction.h
         src/utils/FPSCounter.cpp
-        src/world/ChunkManager.cpp src/world/ChunkManager.h src/utils/Random.h)
+        src/world/ChunkManager.cpp src/world/ChunkManager.h src/utils/Random.h src/utils/LowResPoint.h)
 
 
 target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog

@@ -27,10 +27,18 @@ pf::mc::Chunk::Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::
 
   center = glm::vec3{position} + CHUNK_LEN / 2.0f;
 
-  const auto voxelSpan = std::span{reinterpret_cast<const Voxel*>(data.data() + dataSizeSize + positionSize), (data.size() - dataSizeSize - positionSize) / sizeof(Voxel)};
-  std::ranges::copy(voxelSpan, voxels.begin());
+  const auto changesSpan = std::span{data.begin() + dataSizeSize + positionSize, data.end()};
+  constexpr auto stride = sizeof(LowResPoint) + sizeof(Voxel::Type);
+  ChangeStorage newChanges;
+  for (std::size_t i = 0; i < changesSpan.size(); i += stride) {
+    const auto pos = fromBytes<LowResPoint>(std::span{changesSpan.begin() + i, changesSpan.begin() + i + sizeof(LowResPoint)});
+    const auto type = fromBytes<Voxel::Type>(std::span{changesSpan.begin() + i + sizeof(LowResPoint), changesSpan.begin() + i + sizeof(LowResPoint) + sizeof(Voxel::Type)});
+    newChanges[pos] = type;
+  }
 
-  modified = true;
+  generateVoxelData(noiseGenerator);
+
+  setChanges(newChanges);
 }
 
 void pf::mc::Chunk::update() {
@@ -91,6 +99,7 @@ void pf::mc::Chunk::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
   voxels[voxelIndex].type = type;
   setChanged();
   modified = true;
+  changes[LowResPoint{coords.x, coords.y, coords.z}] = type;
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
@@ -276,16 +285,31 @@ std::vector<std::byte> pf::mc::Chunk::serialize() const {
   std::vector<std::byte> result{};
   result.reserve(CHUNK_SIZE * sizeof(Voxel) + sizeof(decltype(position)));
 
-  std::vector<std::byte> voxelData;
-  std::ranges::for_each(voxels, [&voxelData](const auto &voxel) {
-    const auto voxelBytes = toBytes(voxel);
-    voxelData.insert(voxelData.end(), voxelBytes.begin(), voxelBytes.end());
+  std::vector<std::byte> changesData;
+  std::ranges::for_each(changes, [&changesData](const auto &change) {
+    const auto &[position, type] = change;
+    const auto rawPosition = toBytes(position);
+    const auto rawType = toBytes(type);
+    changesData.insert(changesData.end(), rawPosition.begin(), rawPosition.end());
+    changesData.insert(changesData.end(), rawType.begin(), rawType.end());
   });
 
   const auto positionRaw = toBytes(position);
-  const auto dataSizeRaw = toBytes(voxelData.size() + sizeof(position));
+  const auto dataSizeRaw = toBytes(changesData.size() + positionRaw.size());
   result.insert(result.end(), dataSizeRaw.begin(), dataSizeRaw.end());
   result.insert(result.end(), positionRaw.begin(), positionRaw.end());
-  result.insert(result.end(), voxelData.begin(), voxelData.end());
+  result.insert(result.end(), changesData.begin(), changesData.end());
+  log("Serializing {}x{}x{}, changes size: {}", position.x, position.y, position.z, changesData.size());
   return result;
+}
+
+const std::unordered_map<pf::mc::LowResPoint, pf::mc::Voxel::Type> &pf::mc::Chunk::getChanges() const {
+  return changes;
+}
+
+void pf::mc::Chunk::setChanges(const std::unordered_map<LowResPoint, Voxel::Type> &changes) {
+  Chunk::changes = changes;
+  for (const auto &[position, type] : changes) {
+    setVoxel(position, type);
+  }
 }

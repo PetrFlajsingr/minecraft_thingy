@@ -10,16 +10,20 @@
 #include <geGL/Buffer.h>
 #include <geGL/VertexArray.h>
 #include <noise/NoiseGenerator.h>
-#include <pf_common/math/BoundingBox.h>
 #include <pf_common/concepts/Serializable.h>
+#include <pf_common/math/BoundingBox.h>
+#include <unordered_map>
+#include <utils/LowResPoint.h>
 
 namespace pf::mc {
+
 
 constexpr static std::size_t CHUNK_LEN = 16;
 constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 
 class Chunk {
  public:
+  using ChangeStorage = std::unordered_map<LowResPoint, Voxel::Type>;
   Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator);
   Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data);
 
@@ -28,6 +32,7 @@ class Chunk {
   void update();
   void createMesh();
   void render();
+
 
   [[nodiscard]] const glm::ivec3 &getPosition() const;
   [[nodiscard]] const glm::vec3 &getCenter() const;
@@ -43,6 +48,10 @@ class Chunk {
   [[nodiscard]] bool isModified() const;
 
   [[nodiscard]] std::vector<std::byte> serialize() const;
+
+  [[nodiscard]] const std::unordered_map<LowResPoint, Voxel::Type> &getChanges() const;
+
+  void setChanges(const std::unordered_map<LowResPoint, Voxel::Type> &changes);
 
  private:
   void generateVoxelData(const NoiseGenerator &noiseGenerator);
@@ -67,9 +76,14 @@ class Chunk {
   GeometryData mesh;
 
   bool modified = false;
+
+  std::unordered_map<LowResPoint, Voxel::Type> changes;
 };
+
+
 static_assert(Serializable<Chunk>);
 
-}
+}// namespace pf::mc
+
 
 #endif//OPENGL_TEMPLATE_SRC_WORLD_CHUNK_H

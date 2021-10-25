@@ -50,7 +50,15 @@ class ChunkManager {
   [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
 
   Safe<std::vector<std::unique_ptr<Chunk>>> chunks;
-  std::vector<std::unique_ptr<Chunk>> hiddenModifiedChunks;
+
+  //std::vector<std::unique_ptr<Chunk>> hiddenModifiedChunks;
+  struct ChunkChangeData {
+    ChunkChangeData(const glm::ivec3 &position, Chunk::ChangeStorage changes);
+    glm::ivec3 position;
+    Chunk::ChangeStorage changes;
+  };
+  std::vector<ChunkChangeData> hiddenChunkChanges;
+
   Safe<std::vector<glm::ivec3>> emptyChunks;
   std::size_t chunkLimit;
   double renderDistance;
