@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
   mainWindow.setInputIgnorePredicate([&] { return ui.imguiInterface->isWindowHovered() || ui.imguiInterface->isKeyboardCaptured(); });
 
   auto camera = std::make_shared<Camera>();
-  camera->Position = ui::ig::deserializeGlmVec<glm::vec3>(*config["camera"]["position"].as_array());
+  //camera->Position = ui::ig::deserializeGlmVec<glm::vec3>(*config["camera"]["position"].as_array());
   camera->MovementSpeed = camera->MovementSpeed * 10;
   bool cameraMoveEnabled = false;
   bool destructionActive = false;
@@ -205,6 +205,13 @@ int main(int argc, char *argv[]) {
   ui.clipCheckbox->addValueListener([&](bool enabled) {
     isClippingEnabled = enabled;
   });
+
+  {
+    auto noiseGenerator = renderer.getChunkManager().getNoiseGenerator();
+    while (noiseGenerator->noise(camera->Position) > 0) {
+      camera->Position.y += 2;
+    }
+  }
 
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};

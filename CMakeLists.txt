@@ -39,13 +39,13 @@ find_package(GLFW3 REQUIRED)
 CPMAddPackage(
         NAME pf_common
         GITHUB_REPOSITORY PetrFlajsingr/pf_common
-        GIT_TAG master
+        GIT_TAG v1.1.1b
 )
 
 CPMAddPackage(
         NAME pf_imgui
         GITHUB_REPOSITORY PetrFlajsingr/pf_imgui
-        GIT_TAG master
+        GIT_TAG v6.0.2b
 )
 
 

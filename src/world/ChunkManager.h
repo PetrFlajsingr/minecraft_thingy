@@ -42,6 +42,8 @@ class ChunkManager {
 
   void resetAndDeserialize(const nlohmann::json &data);
 
+  const std::shared_ptr<NoiseGenerator> &getNoiseGenerator() const;
+
  private:
   void unloadDistantChunks(glm::vec3 cameraPosition);
 

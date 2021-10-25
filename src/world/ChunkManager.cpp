@@ -227,5 +227,8 @@ void pf::mc::ChunkManager::resetAndDeserialize(const nlohmann::json &data) {
     chunksAccess->emplace_back(std::move(newChunk));
   }
 }
+const std::shared_ptr<pf::mc::NoiseGenerator> &pf::mc::ChunkManager::getNoiseGenerator() const {
+  return noiseGenerator;
+}
 
 pf::mc::ChunkManager::ChunkChangeData::ChunkChangeData(const glm::ivec3 &position, pf::mc::Chunk::ChangeStorage changes) : position(position), changes(std::move(changes)) {}
