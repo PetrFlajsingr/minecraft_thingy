@@ -1,5 +1,10 @@
 # Minecraft thingy
-A simple overview of how the 'game' is implemented.
+## How to run
+Either use `cmake` to build the project or use `exe` in `bin/`. If you wish to use the `exe` follow instructions 
+in `bin/README.md`.
+
+
+A simple overview of how the 'game' is implemented:
 
 ### Voxels
 Voxels are based on integral grid in world space. There are 5 types, one of them being 'Empty'.  Type of the 
@@ -11,7 +16,7 @@ gravel can be only found underground.
 ### Chunks
 The world is divided into chunks. These chunks are un/loaded based on distance from camera. Upon changing types of voxel - by generating them or being 
 modified by the user - a new mesh for the chunk is generated. 
-
+__
 Each chunk holds a log of its modifications. This is the only part being saved when the chunk is unloaded or saved to
 disk. Originally I had created a binary format to save world data, due to not having enough time to fix bugs 
 I was forced to use inefficient JSON.

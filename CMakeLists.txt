@@ -49,6 +49,8 @@ CPMAddPackage(
 )
 
 
+set(GLFW3_DIR ${PROJECT_SOURCE_DIR}/GLFW)
+
 #add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 hunter_add_package(nlohmann_json)
 find_package(nlohmann_json CONFIG REQUIRED)
