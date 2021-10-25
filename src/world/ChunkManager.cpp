@@ -4,7 +4,9 @@
 
 #include "ChunkManager.h"
 #include <algorithm>
+#include <utility>
 #include <log.h>
+#include <pf_common/bin.h>
 
 pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance, double seed) : chunkLimit(chunkLimit),
                                                                                                  renderDistance(renderDistance),
@@ -19,6 +21,8 @@ pf::mc::ChunkManager::~ChunkManager() {
 void pf::mc::ChunkManager::resetWithSeed(double seed) {
   chunks.writeAccess()->clear();
   emptyChunks.writeAccess()->clear();
+  //hiddenModifiedChunks.clear();
+  hiddenChunkChanges.clear();
   ChunkManager::seed = seed;
   noiseGenerator.setSeed(seed);
 }
@@ -30,6 +34,20 @@ void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
   for (const auto &position : newChunkPositions) {
     auto emptyChunksAccess = emptyChunks.readOnlyAccess();
     if (std::ranges::find(*emptyChunksAccess, position) != std::ranges::end(*emptyChunksAccess)) {
+      continue;
+    }
+    /*if (auto iter = std::ranges::find_if(hiddenModifiedChunks, [position](const auto &chunk) { return chunk->getPosition() == position; });
+        iter != hiddenModifiedChunks.end()) {
+      chunks.writeAccess()->emplace_back(std::move(*iter));
+      hiddenModifiedChunks.erase(iter);
+      continue;
+    }*/
+    if (auto iter = std::ranges::find_if(hiddenChunkChanges, [position](const auto &change) { return change.position == position; });
+        iter != hiddenChunkChanges.end()) {
+      auto newChunk = std::make_unique<Chunk>(position, noiseGenerator);
+      newChunk->setChanges(iter->changes);
+      chunks.writeAccess()->emplace_back(std::move(newChunk));
+      hiddenChunkChanges.erase(iter);
       continue;
     }
     // creating the chunk outside thread because it creates buffers
@@ -91,10 +109,20 @@ std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::m
   }
   return result;
 }
+
 void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
-  auto chunksAccess = chunks.writeAccess();
-  auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
+  const auto shouldUnload = [&](const auto &chunk) {
     return glm::distance(chunk->getCenter(), cameraPosition) > renderDistance;
+  };
+  auto chunksAccess = chunks.writeAccess();
+  for (auto &chunk : *chunksAccess) {
+    if (shouldUnload(chunk) && chunk->isModified()) {
+      hiddenChunkChanges.emplace_back(chunk->getPosition(), chunk->getChanges());
+      //hiddenModifiedChunks.emplace_back(std::move(chunk));
+    }
+  }
+  auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
+    return chunk == nullptr || shouldUnload(chunk);
   });
   if (!toRemove.empty()) {
     log("Unloading {} chunks", toRemove.size());
@@ -107,6 +135,7 @@ double pf::mc::ChunkManager::getSeed() const {
   return seed;
 }
 
+// TODO: load only chunks on edges
 std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 cameraPosition) const {
   std::vector<glm::ivec3> result{};
   auto min = glm::ivec3{cameraPosition - static_cast<float>(renderDistance)};
@@ -177,3 +206,44 @@ std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay
   }
   return std::nullopt;
 }
+
+std::vector<std::byte> pf::mc::ChunkManager::serialize() const {
+  std::vector<std::byte> result{toBytes(seed)};
+  std::vector<std::byte> chunkData;
+  std::size_t chunkCount = 0;
+  std::ranges::for_each(hiddenChunkChanges, [&](const auto &change) {
+    auto chunk = Chunk{change.position, noiseGenerator};
+    chunk.setChanges(change.changes);
+    const auto serializedChunk = chunk.serialize();
+    chunkData.insert(chunkData.end(), serializedChunk.begin(), serializedChunk.end());
+    ++chunkCount;
+  });
+  std::ranges::for_each(*chunks.readOnlyAccess(), [&](const auto &chunk) {
+    if (chunk->isModified()) {
+      const auto serializedChunk = chunk->serialize();
+      chunkData.insert(chunkData.end(), serializedChunk.begin(), serializedChunk.end());
+      ++chunkCount;
+    }
+  });
+  const auto chunkCountRaw = toBytes(chunkCount);
+  result.insert(result.end(), chunkCountRaw.begin(), chunkCountRaw.end());
+  result.insert(result.end(), chunkData.begin(), chunkData.end());
+  return result;
+}
+
+void pf::mc::ChunkManager::resetAndDeserialize(const std::vector<std::byte> &data) {
+  const auto newSeed = fromBytes<double>(std::span(data.begin(), data.begin() + sizeof(double)));
+  resetWithSeed(newSeed);
+  const auto chunkCount = fromBytes<std::size_t>(std::span(data.begin() + sizeof(double), sizeof(std::size_t)));
+  std::size_t dataOffset = sizeof(double) + sizeof(std::size_t);
+  auto chunksAccess = chunks.writeAccess();
+  for (std::size_t i = 0; i < chunkCount; ++i) {
+    const auto chunkDataSize = fromBytes<std::size_t>(std::span{data.begin() + dataOffset, sizeof(std::size_t)});
+    const auto chunkData = std::span{data.begin() + dataOffset, data.begin() + dataOffset + chunkDataSize + sizeof(std::size_t)};
+    auto newChunk = std::make_unique<Chunk>(noiseGenerator, chunkData);
+    chunksAccess->emplace_back(std::move(newChunk));
+    dataOffset += chunkDataSize + sizeof(std::size_t);
+  }
+}
+
+pf::mc::ChunkManager::ChunkChangeData::ChunkChangeData(const glm::ivec3 &position, pf::mc::Chunk::ChangeStorage changes) : position(position), changes(std::move(changes)) {}

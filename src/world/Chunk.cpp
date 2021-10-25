@@ -4,6 +4,7 @@
 
 #include "Chunk.h"
 #include <fmt/core.h>
+#include <pf_common/bin.h>
 #include <log.h>
 
 pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
@@ -13,6 +14,31 @@ pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) 
                                                                                  position(position),
                                                                                  center(glm::vec3{position} + CHUNK_LEN / 2.0f) {
   generateVoxelData(noiseGenerator);
+}
+
+pf::mc::Chunk::Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data) : changed(true),
+                                                           vbo(std::make_shared<Buffer>()),
+                                                           nbo(std::make_shared<Buffer>()),
+                                                           vao(std::make_shared<VertexArray>()) {
+  const auto dataSize = fromBytes<std::size_t>(std::span{data.begin(), data.begin() + sizeof(std::size_t)});
+  const auto dataSizeSize = sizeof(std::size_t);
+  constexpr auto positionSize =  sizeof(decltype(position));
+  position = fromBytes<decltype(position)>(std::span{data.begin() + dataSizeSize, data.begin() + dataSizeSize + positionSize});
+
+  center = glm::vec3{position} + CHUNK_LEN / 2.0f;
+
+  const auto changesSpan = std::span{data.begin() + dataSizeSize + positionSize, data.end()};
+  constexpr auto stride = sizeof(LowResPoint) + sizeof(Voxel::Type);
+  ChangeStorage newChanges;
+  for (std::size_t i = 0; i < changesSpan.size(); i += stride) {
+    const auto pos = fromBytes<LowResPoint>(std::span{changesSpan.begin() + i, changesSpan.begin() + i + sizeof(LowResPoint)});
+    const auto type = fromBytes<Voxel::Type>(std::span{changesSpan.begin() + i + sizeof(LowResPoint), changesSpan.begin() + i + sizeof(LowResPoint) + sizeof(Voxel::Type)});
+    newChanges[pos] = type;
+  }
+
+  generateVoxelData(noiseGenerator);
+
+  setChanges(newChanges);
 }
 
 void pf::mc::Chunk::update() {
@@ -72,6 +98,8 @@ void pf::mc::Chunk::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
   const auto voxelIndex = index3Dto1D(coords.x, coords.y, coords.z);
   voxels[voxelIndex].type = type;
   setChanged();
+  modified = true;
+  changes[LowResPoint{coords.x, coords.y, coords.z}] = type;
 }
 
 void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
@@ -247,4 +275,41 @@ pf::math::BoundingBox<3> pf::mc::Chunk::getAABB() const {
 
 std::size_t pf::mc::Chunk::getVertexCount() const {
   return vertexCount;
+}
+
+bool pf::mc::Chunk::isModified() const {
+  return modified;
+}
+
+std::vector<std::byte> pf::mc::Chunk::serialize() const {
+  std::vector<std::byte> result{};
+  result.reserve(CHUNK_SIZE * sizeof(Voxel) + sizeof(decltype(position)));
+
+  std::vector<std::byte> changesData;
+  std::ranges::for_each(changes, [&changesData](const auto &change) {
+    const auto &[position, type] = change;
+    const auto rawPosition = toBytes(position);
+    const auto rawType = toBytes(type);
+    changesData.insert(changesData.end(), rawPosition.begin(), rawPosition.end());
+    changesData.insert(changesData.end(), rawType.begin(), rawType.end());
+  });
+
+  const auto positionRaw = toBytes(position);
+  const auto dataSizeRaw = toBytes(changesData.size() + positionRaw.size());
+  result.insert(result.end(), dataSizeRaw.begin(), dataSizeRaw.end());
+  result.insert(result.end(), positionRaw.begin(), positionRaw.end());
+  result.insert(result.end(), changesData.begin(), changesData.end());
+  log("Serializing {}x{}x{}, changes size: {}", position.x, position.y, position.z, changesData.size());
+  return result;
+}
+
+const std::unordered_map<pf::mc::LowResPoint, pf::mc::Voxel::Type> &pf::mc::Chunk::getChanges() const {
+  return changes;
+}
+
+void pf::mc::Chunk::setChanges(const std::unordered_map<LowResPoint, Voxel::Type> &changes) {
+  Chunk::changes = changes;
+  for (const auto &[position, type] : changes) {
+    setVoxel(position, type);
+  }
 }

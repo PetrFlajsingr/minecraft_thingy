@@ -22,6 +22,9 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
 
   appMenuBar = &imguiInterface->getMenuBar();
   fileSubMenu = &appMenuBar->addSubmenu("file_submenu", ICON_FA_FILE_ALT " File");
+  saveFileButton = &fileSubMenu->addButtonItem("save_file_button", ICON_FA_SAVE " Save world");
+  loadFileButton = &fileSubMenu->addButtonItem("load_file_button", "Load world");
+
   cameraWindow = &imguiInterface->createWindow("camera_window", "Camera");
   cameraWindow->setIsDockable(true);
   camWindowLayout = &cameraWindow->createChild<BoxLayout>("cam_window_layout", LayoutDirection::TopToBottom, Size::Auto(), AllowCollapse::No, Persistent::Yes);
