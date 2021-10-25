@@ -16,15 +16,21 @@ pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) 
   generateVoxelData(noiseGenerator);
 }
 
-pf::mc::Chunk::Chunk(const std::vector<std::byte> &data) : changed(true),
+pf::mc::Chunk::Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data) : changed(true),
                                                            vbo(std::make_shared<Buffer>()),
                                                            nbo(std::make_shared<Buffer>()),
                                                            vao(std::make_shared<VertexArray>()) {
+  const auto dataSize = fromBytes<std::size_t>(std::span{data.begin(), data.begin() + sizeof(std::size_t)});
+  const auto dataSizeSize = sizeof(std::size_t);
   constexpr auto positionSize =  sizeof(decltype(position));
-  position = fromBytes<decltype(position)>(std::span{data.begin(), data.begin() + positionSize});
+  position = fromBytes<decltype(position)>(std::span{data.begin() + dataSizeSize, data.begin() + dataSizeSize + positionSize});
+
   center = glm::vec3{position} + CHUNK_LEN / 2.0f;
-  const auto voxelSpan = std::span{reinterpret_cast<const Voxel*>(data.data() + positionSize), (data.size() - positionSize) / sizeof(Voxel)};
+
+  const auto voxelSpan = std::span{reinterpret_cast<const Voxel*>(data.data() + dataSizeSize + positionSize), (data.size() - dataSizeSize - positionSize) / sizeof(Voxel)};
   std::ranges::copy(voxelSpan, voxels.begin());
+
+  modified = true;
 }
 
 void pf::mc::Chunk::update() {
@@ -267,11 +273,19 @@ bool pf::mc::Chunk::isModified() const {
 }
 
 std::vector<std::byte> pf::mc::Chunk::serialize() const {
-  std::vector<std::byte> result{toBytes(position)};
+  std::vector<std::byte> result{};
   result.reserve(CHUNK_SIZE * sizeof(Voxel) + sizeof(decltype(position)));
-  std::ranges::for_each(voxels, [&result](const auto &voxel) {
+
+  std::vector<std::byte> voxelData;
+  std::ranges::for_each(voxels, [&voxelData](const auto &voxel) {
     const auto voxelBytes = toBytes(voxel);
-    result.insert(result.end(), voxelBytes.begin(), voxelBytes.end());
+    voxelData.insert(voxelData.end(), voxelBytes.begin(), voxelBytes.end());
   });
+
+  const auto positionRaw = toBytes(position);
+  const auto dataSizeRaw = toBytes(voxelData.size() + sizeof(position));
+  result.insert(result.end(), dataSizeRaw.begin(), dataSizeRaw.end());
+  result.insert(result.end(), positionRaw.begin(), positionRaw.end());
+  result.insert(result.end(), voxelData.begin(), voxelData.end());
   return result;
 }

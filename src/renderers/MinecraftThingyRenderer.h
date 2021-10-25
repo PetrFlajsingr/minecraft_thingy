@@ -50,6 +50,8 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   [[nodiscard]] std::optional<Voxel> getActiveVoxel() const;
 
+  [[nodiscard]] ChunkManager &getChunkManager();
+
  private:
   glm::ivec3 getLookedAtCoordinatesFromDepth() const;
 

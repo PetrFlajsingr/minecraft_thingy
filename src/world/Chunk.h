@@ -21,7 +21,7 @@ constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 class Chunk {
  public:
   Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator);
-  Chunk(const std::vector<std::byte> &data);
+  Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data);
 
   void setChanged();
 

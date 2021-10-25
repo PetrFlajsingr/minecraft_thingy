@@ -5,6 +5,7 @@
 #include "ChunkManager.h"
 #include <algorithm>
 #include <log.h>
+#include <pf_common/bin.h>
 
 pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance, double seed) : chunkLimit(chunkLimit),
                                                                                                  renderDistance(renderDistance),
@@ -99,7 +100,7 @@ std::vector<pf::mc::Chunk *> pf::mc::ChunkManager::getChunksToRender(const pf::m
   return result;
 }
 void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
-  const auto shouldUnload = [&] (const auto &chunk) {
+  const auto shouldUnload = [&](const auto &chunk) {
     return glm::distance(chunk->getCenter(), cameraPosition) > renderDistance;
   };
   auto chunksAccess = chunks.writeAccess();
@@ -109,7 +110,7 @@ void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
     }
   }
   auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
-    return chunk == nullptr || shouldUnload(chunk) ;
+    return chunk == nullptr || shouldUnload(chunk);
   });
   if (!toRemove.empty()) {
     log("Unloading {} chunks", toRemove.size());
@@ -192,4 +193,36 @@ std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay
     }
   }
   return std::nullopt;
+}
+
+std::vector<std::byte> pf::mc::ChunkManager::serialize() const {
+  std::vector<std::byte> result{toBytes(seed)};
+  std::vector<Chunk *> modifiedChunks{};
+  std::ranges::copy_if((*chunks.readOnlyAccess()) | std::views::transform([](const auto &chunk) { return chunk.get(); }), std::back_inserter(modifiedChunks), [](const auto &chunk) {
+    return chunk->isModified();
+  });
+  std::ranges::copy_if(
+      hiddenModifiedChunks | std::views::transform([](const auto &chunk) { return chunk.get(); }), std::back_inserter(modifiedChunks), [](const auto &chunk) { return chunk->isModified(); });
+  const auto chunkCount = toBytes(modifiedChunks.size());
+  result.insert(result.end(), chunkCount.begin(), chunkCount.end());
+  for (const auto &chunk : modifiedChunks) {
+    const auto chunkData = chunk->serialize();
+    result.insert(result.end(), chunkData.begin(), chunkData.end());
+  }
+  return result;
+}
+
+void pf::mc::ChunkManager::resetAndDeserialize(const std::vector<std::byte> &data) {
+  const auto newSeed = fromBytes<double>(std::span(data.begin(), data.begin() + sizeof(double)));
+  resetWithSeed(newSeed);
+  const auto chunkCount = fromBytes<std::size_t>(std::span(data.begin() + sizeof(double), sizeof(std::size_t)));
+  std::size_t dataOffset = sizeof(double) + sizeof(std::size_t);
+  auto chunksAccess = chunks.writeAccess();
+  for (std::size_t i = 0; i < chunkCount; ++i) {
+    const auto chunkDataSize = fromBytes<std::size_t>(std::span{data.begin() + dataOffset, sizeof(std::size_t)});
+    const auto chunkData = std::span{data.begin() + dataOffset, data.begin() + dataOffset + chunkDataSize};
+    auto newChunk = std::make_unique<Chunk>(noiseGenerator, chunkData);
+    chunksAccess->emplace_back(std::move(newChunk));
+    dataOffset += chunkDataSize + sizeof(std::size_t);
+  }
 }

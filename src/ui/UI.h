@@ -29,6 +29,8 @@ struct UI {
   // clang-format off
   ui::ig::AppMenuBar *appMenuBar;
     ui::ig::SubMenu *fileSubMenu;
+      ui::ig::MenuButtonItem *saveFileButton;
+      ui::ig::MenuButtonItem *loadFileButton;
   ui::ig::Window *cameraWindow;
     ui::ig::BoxLayout *camWindowLayout;
       ui::ig::Text *camPosLabel;
