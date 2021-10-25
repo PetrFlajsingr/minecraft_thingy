@@ -52,6 +52,8 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   [[nodiscard]] ChunkManager &getChunkManager();
 
+  void setChunkGenEnabled(bool chunkGenEnabled);
+
  private:
   glm::ivec3 getLookedAtCoordinatesFromDepth() const;
 
@@ -68,6 +70,7 @@ class MinecraftThingyRenderer : public ogl::Renderer {
 
   bool wireframe = false;
   bool showFrustumCulling = false;
+  bool chunkGenEnabled = true;
 
   std::shared_ptr<Shader> vertexShader;
   std::shared_ptr<Shader> fragmentShader;

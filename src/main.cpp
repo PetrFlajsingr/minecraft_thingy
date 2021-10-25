@@ -201,6 +201,10 @@ int main(int argc, char *argv[]) {
         [] {}, ui::ig::Size{500, 400});
   });
 
+  ui.enableChunkGenCheckbox->addValueListener([&](bool enabled) {
+    renderer.setChunkGenEnabled(enabled);
+  });
+
   bool isClippingEnabled = true;
   ui.clipCheckbox->addValueListener([&](bool enabled) {
     isClippingEnabled = enabled;

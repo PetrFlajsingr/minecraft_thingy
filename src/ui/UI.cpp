@@ -85,6 +85,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   generateButton->setTooltip("Generate the world again with provided seed");
   randomizeButton = &worldWindow->createChild<Button>("randomize_button", "Randomize");
   randomizeButton->setTooltip("Generate the world again with a random seed");
+  enableChunkGenCheckbox = &worldWindow->createChild<Checkbox>("enable_world_gen_checkbox", "Enable chunk gen", true);
 
   auto &welcomeWindow = imguiInterface->createWindow("welcome_dialog", "Welcome");
   welcomeWindow.createChild<Bullet<Text>>("w1_txt", "Hold right mouse button to interact with camera");

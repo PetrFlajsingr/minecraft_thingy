@@ -1,0 +1,35 @@
+[camera]
+position = [ 0.0, 40.0, 0.0 ]
+
+[chunks]
+max_limit = 128
+render_distance = 60
+
+[files]
+resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
+
+[imgui]
+path_icons = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources\icons'
+
+    [imgui.cam_window_layout]
+    collapsed = false
+
+    [imgui.clip_checkbox]
+    checked = false
+
+    [imgui.combobox_vox_type]
+    selected = 'Gravel'
+
+    [imgui.frustum_culling_checkbox]
+    checked = false
+
+    [imgui.light_pos_slider]
+    value = [ 0.017000000923871994, -1.0, 1.0 ]
+
+    [imgui.wireframe_checkbox]
+    checked = false
+
+[window]
+height = 1200
+title = 'Minecraft thingy'
+width = 1800

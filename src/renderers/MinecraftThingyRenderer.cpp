@@ -83,7 +83,9 @@ std::optional<std::string> pf::mc::MinecraftThingyRenderer::init() {
 }
 
 void pf::mc::MinecraftThingyRenderer::render() {
-  chunkManager.generateChunks(camera->Position);
+  if (chunkGenEnabled) {
+    chunkManager.generateChunks(camera->Position);
+  }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glEnable(GL_CULL_FACE);
@@ -214,4 +216,7 @@ void pf::mc::MinecraftThingyRenderer::setWorldSeed(double seed) {
 
 pf::mc::ChunkManager &pf::mc::MinecraftThingyRenderer::getChunkManager() {
   return chunkManager;
+}
+void pf::mc::MinecraftThingyRenderer::setChunkGenEnabled(bool chunkGenEnabled) {
+  MinecraftThingyRenderer::chunkGenEnabled = chunkGenEnabled;
 }
