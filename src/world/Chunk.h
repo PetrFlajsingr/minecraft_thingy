@@ -12,6 +12,7 @@
 #include <noise/NoiseGenerator.h>
 #include <pf_common/concepts/Serializable.h>
 #include <pf_common/math/BoundingBox.h>
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 #include <utils/LowResPoint.h>
 
@@ -25,7 +26,7 @@ class Chunk {
  public:
   using ChangeStorage = std::unordered_map<LowResPoint, Voxel::Type>;
   Chunk(glm::ivec3 position, std::shared_ptr<NoiseGenerator> noiseGenerator);
-  Chunk(std::shared_ptr<NoiseGenerator> noiseGenerator, std::span<const std::byte> data);
+  Chunk(std::shared_ptr<NoiseGenerator> noiseGenerator, const nlohmann::json &data);
 
   void setChanged();
 
@@ -47,7 +48,7 @@ class Chunk {
 
   [[nodiscard]] bool isModified() const;
 
-  [[nodiscard]] std::vector<std::byte> serialize() const;
+  [[nodiscard]] nlohmann::json serialize() const;
 
   [[nodiscard]] const std::unordered_map<LowResPoint, Voxel::Type> &getChanges() const;
 
@@ -83,7 +84,6 @@ class Chunk {
 };
 
 
-static_assert(Serializable<Chunk>);
 
 }// namespace pf::mc
 

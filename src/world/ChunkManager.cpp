@@ -7,6 +7,7 @@
 #include <log.h>
 #include <pf_common/bin.h>
 #include <utility>
+#include <log.h>
 
 pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance, double seed) : chunkLimit(chunkLimit),
                                                                                                  renderDistance(renderDistance),
@@ -196,42 +197,34 @@ std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay
   return std::nullopt;
 }
 
-std::vector<std::byte> pf::mc::ChunkManager::serialize() const {
-  std::vector<std::byte> result{toBytes(seed)};
-  std::vector<std::byte> chunkData;
-  std::size_t chunkCount = 0;
+nlohmann::json pf::mc::ChunkManager::serialize() const {
+  nlohmann::json result;
+  result["seed"] = seed;
+  result["chunks"] = nlohmann::json::array();
+
   std::ranges::for_each(hiddenChunkChanges, [&](const auto &change) {
     auto chunk = Chunk{change.position, noiseGenerator};
     chunk.setChanges(change.changes);
     const auto serializedChunk = chunk.serialize();
-    chunkData.insert(chunkData.end(), serializedChunk.begin(), serializedChunk.end());
-    ++chunkCount;
+    result["chunks"].emplace_back(serializedChunk);
   });
   std::ranges::for_each(*chunks.readOnlyAccess(), [&](const auto &chunk) {
     if (chunk->isModified()) {
       const auto serializedChunk = chunk->serialize();
-      chunkData.insert(chunkData.end(), serializedChunk.begin(), serializedChunk.end());
-      ++chunkCount;
+      result["chunks"].emplace_back(serializedChunk);
     }
   });
-  const auto chunkCountRaw = toBytes(chunkCount);
-  result.insert(result.end(), chunkCountRaw.begin(), chunkCountRaw.end());
-  result.insert(result.end(), chunkData.begin(), chunkData.end());
   return result;
 }
 
-void pf::mc::ChunkManager::resetAndDeserialize(const std::vector<std::byte> &data) {
-  const auto newSeed = fromBytes<double>(std::span(data.begin(), data.begin() + sizeof(double)));
+void pf::mc::ChunkManager::resetAndDeserialize(const nlohmann::json &data) {
+  const double newSeed = data["seed"];
   resetWithSeed(newSeed);
-  const auto chunkCount = fromBytes<std::size_t>(std::span(data.begin() + sizeof(double), sizeof(std::size_t)));
-  std::size_t dataOffset = sizeof(double) + sizeof(std::size_t);
+
   auto chunksAccess = chunks.writeAccess();
-  for (std::size_t i = 0; i < chunkCount; ++i) {
-    const auto chunkDataSize = fromBytes<std::size_t>(std::span{data.begin() + dataOffset, sizeof(std::size_t)});
-    const auto chunkData = std::span{data.begin() + dataOffset, data.begin() + dataOffset + chunkDataSize + sizeof(std::size_t)};
-    auto newChunk = std::make_unique<Chunk>(noiseGenerator, chunkData);
+  for (const auto &chunkInfo : data["chunks"]) {
+    auto newChunk = std::make_unique<Chunk>(noiseGenerator, chunkInfo);
     chunksAccess->emplace_back(std::move(newChunk));
-    dataOffset += chunkDataSize + sizeof(std::size_t);
   }
 }
 

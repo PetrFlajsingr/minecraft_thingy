@@ -180,25 +180,23 @@ int main(int argc, char *argv[]) {
 
   ui.saveFileButton->addClickListener([&] {
     ui.imguiInterface->openFileDialog(
-        "Select target", {ui::ig::FileExtensionSettings{{"ch_bin"}, "Chunk data (.ch_bin)", ImVec4{1, 0, 0, 1}}},
+        "Select target", {ui::ig::FileExtensionSettings{{"json"}, "json", ImVec4{1, 0, 0, 1}}},
         [&](const auto &selected) {
           const auto &dst = selected[0];
-          const auto dataToSave = renderer.getChunkManager().serialize();
-          createFile(dst, dataToSave);
+          const auto data = renderer.getChunkManager().serialize();
+          createFile(dst, data.dump(4));
         },
         [] {}, ui::ig::Size{500, 400});
   });
 
   ui.loadFileButton->addClickListener([&] {
     ui.imguiInterface->openFileDialog(
-        "Select saved world", {ui::ig::FileExtensionSettings{{"ch_bin"}, "Chunk data (.ch_bin)", ImVec4{1, 0, 0, 1}}},
+        "Select saved world", {ui::ig::FileExtensionSettings{{"json"}, "json", ImVec4{1, 0, 0, 1}}},
         [&](const auto &selected) {
           const auto &dst = selected[0];
-          auto data = readBinFile(dst);
-          if (data.has_value()) {
-            renderer.getChunkManager().resetAndDeserialize(data.value());
-            ui.seedInput->setValue(renderer.getChunkManager().getSeed());
-          }
+          auto data = nlohmann::json::parse(readFile(dst).value());
+          renderer.getChunkManager().resetAndDeserialize(data);
+          ui.seedInput->setValue(renderer.getChunkManager().getSeed());
         },
         [] {}, ui::ig::Size{500, 400});
   });

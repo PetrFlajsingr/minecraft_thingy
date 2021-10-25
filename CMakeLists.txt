@@ -50,8 +50,8 @@ CPMAddPackage(
 
 
 #add_compile_definitions(SPDLOG_FMT_EXTERNAL)
-#hunter_add_package(spdlog)
-#find_package(spdlog CONFIG REQUIRED)
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 add_library(glad src/glad.c)
 
@@ -76,7 +76,7 @@ add_executable(minecraft_thingy
         src/world/ChunkManager.cpp src/world/ChunkManager.h src/utils/Random.h src/utils/LowResPoint.h)
 
 
-target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui #fmt::fmt spdlog::spdlog
+target_link_libraries(minecraft_thingy glad glfw ${OPENGL_LIBRARIES} pf_common::pf_common pf_imgui::pf_imgui nlohmann_json::nlohmann_json #fmt::fmt spdlog::spdlog
         )
 
 if(WIN32)

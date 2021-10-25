@@ -38,9 +38,9 @@ class ChunkManager {
 
   [[nodiscard]] std::vector<Chunk *> getChunksToRender(const math::ViewFrustum &viewFrustum, bool onlyFullyContained = false);
 
-  [[nodiscard]] std::vector<std::byte> serialize() const;
+  [[nodiscard]] nlohmann::json serialize() const;
 
-  void resetAndDeserialize(const std::vector<std::byte> &data);
+  void resetAndDeserialize(const nlohmann::json &data);
 
  private:
   void unloadDistantChunks(glm::vec3 cameraPosition);

@@ -20,6 +20,11 @@ namespace pf {
 
 [[nodiscard]] std::optional<std::vector<std::byte>> readBinFile(const std::filesystem::path &path);
 
+inline void createFile(const std::filesystem::path &path, std::string data) {
+  std::ofstream ofstream{path};
+  ofstream << data;
+}
+
 template <typename T>
 void createFile(const std::filesystem::path& path, const std::vector<T> &data) {
   std::ofstream ofstream{path};
