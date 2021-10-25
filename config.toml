@@ -2,8 +2,8 @@
 position = [ 0.0, 40.0, 0.0 ]
 
 [chunks]
-max_limit = 32
-render_distance = 40
+max_limit = 128
+render_distance = 60
 
 [files]
 resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
@@ -18,7 +18,7 @@ collapsed = false
 checked = false
 
 [imgui.combobox_vox_type]
-selected = 'Ice'
+selected = 'Gravel'
 
 [imgui.frustum_culling_checkbox]
 checked = false

@@ -86,6 +86,19 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   randomizeButton = &worldWindow->createChild<Button>("randomize_button", "Randomize");
   randomizeButton->setTooltip("Generate the world again with a random seed");
 
+  auto &welcomeWindow = imguiInterface->createWindow("welcome_dialog", "Welcome");
+  welcomeWindow.createChild<Bullet<Text>>("w1_txt", "Hold right mouse button to interact with camera");
+  welcomeWindow.createChild<Bullet<Text>>("w2_txt", "W - forward");
+  welcomeWindow.createChild<Bullet<Text>>("w3_txt", "A - left");
+  welcomeWindow.createChild<Bullet<Text>>("w4_txt", "S - backward");
+  welcomeWindow.createChild<Bullet<Text>>("w5_txt", "D - right");
+  welcomeWindow.createChild<Bullet<Text>>("w6_txt", "Q - up");
+  welcomeWindow.createChild<Bullet<Text>>("w7_txt", "E - down");
+  welcomeWindow.createChild<Text>("w8_txt", "Interaction controls are in the window called 'Controls'");
+  welcomeWindow.createChild<Button>("w_close", "Ok").addClickListener([&] {
+    welcomeWindow.setVisibility(Visibility::Invisible);
+  });
+
   imguiInterface->setStateFromConfig();
 }
 

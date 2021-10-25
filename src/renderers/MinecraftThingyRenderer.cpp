@@ -31,6 +31,8 @@ pf::mc::MinecraftThingyRenderer::MinecraftThingyRenderer(std::filesystem::path s
   auto stbImgDeleter = [](stbi_uc *ptr) {
     stbi_image_free(ptr);
   };
+
+
   std::unique_ptr<stbi_uc, decltype(stbImgDeleter)> stbImage(stbi_load((textureDir / "blocks.png").string().c_str(), &width, &height, &channels, 0), stbImgDeleter);
   blockTextureAtlas = std::make_shared<Texture>(GL_TEXTURE_2D, GL_RGBA, 0, width, height);
   blockTextureAtlas->texParameteri(GL_TEXTURE_WRAP_S, GL_REPEAT);
