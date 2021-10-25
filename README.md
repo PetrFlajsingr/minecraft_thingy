@@ -1,4 +1,4 @@
 # TODO
-* speed up chunk checking
-* player world collision
+* geom shader only edges
+* skybox
 * write up short paper
