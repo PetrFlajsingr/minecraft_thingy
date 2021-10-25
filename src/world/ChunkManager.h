@@ -47,7 +47,7 @@ class ChunkManager {
 
   [[nodiscard]] Chunk *chunkForCoords(glm::ivec3 coords) const;
 
-  [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition) const;
+  [[nodiscard]] std::vector<glm::ivec3> getAllChunksToGenerate(glm::vec3 cameraPosition);
 
   Safe<std::vector<std::unique_ptr<Chunk>>> chunks;
 
@@ -66,6 +66,9 @@ class ChunkManager {
   PerlinNoiseGenerator noiseGenerator;
 
   ThreadPool loadingThreadPool{4};
+
+  bool isFirstGen = true;
+  glm::vec3 previousPosition;
 };
 
 }// namespace pf::mc

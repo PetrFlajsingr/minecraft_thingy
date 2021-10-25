@@ -203,9 +203,21 @@ int main(int argc, char *argv[]) {
         [] {}, ui::ig::Size{500, 400});
   });
 
+  bool isClippingEnabled = true;
+  ui.clipCheckbox->addValueListener([&](bool enabled) {
+    isClippingEnabled = enabled;
+  });
+
   double lastFrameTime = 0.0;
   FPSCounter fpsCounter{};
+  glm::vec3 prevCamPos = camera->Position;
   mainWindow.setMainLoop([&](double time) {
+    if (!isClippingEnabled) {
+      const auto currentVoxel = renderer.getChunkManager().getVoxel(camera->Position);
+      if (currentVoxel.has_value() && currentVoxel->type != mc::Voxel::Type::Empty) {
+        camera->Position = prevCamPos;
+      }
+    }
     frameTime = time - lastFrameTime;
     lastFrameTime = time;
     renderer.render();
@@ -214,6 +226,7 @@ int main(int argc, char *argv[]) {
     ui.fpsCurrentPlot->addValue(fpsCounter.currentFPS());
     ui.fpsLabel->setText("Average FPS: {}", fpsCounter.averageFPS());
     ui.imguiInterface->render();
+    prevCamPos = camera->Position;
   });
 
   fmt::print("Starting main loop\n");

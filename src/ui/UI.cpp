@@ -36,7 +36,7 @@ UI::UI(const toml::table &config, GLFWwindow *windowHandle) {
   moveToOriginButton->setTooltip("Move camera to [0, 0, 0]");
   showWireframeCheckbox = &camWindowLayout->createChild<Checkbox>("wireframe_checkbox", "Wireframe", false, Persistent::Yes);
   showWireframeCheckbox->setTooltip("Enable wireframe rendering");
-  clipCheckbox = &camWindowLayout->createChild<Checkbox>("clip_checkbox", "Clip - not implemented", true, Persistent::Yes);
+  clipCheckbox = &camWindowLayout->createChild<Checkbox>("clip_checkbox", "Clip - not implemented", true);
   clipCheckbox->setTooltip("NOT IMPLEMENTED");
   frustumCullingCheckbox = &camWindowLayout->createChild<Checkbox>("frustum_culling_checkbox", "Show frustum culling", false, Persistent::Yes);
   frustumCullingCheckbox->setTooltip("Only render chunks which are fully within the view frustum");

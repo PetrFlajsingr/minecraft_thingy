@@ -4,9 +4,9 @@
 
 #include "ChunkManager.h"
 #include <algorithm>
-#include <utility>
 #include <log.h>
 #include <pf_common/bin.h>
+#include <utility>
 
 pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance, double seed) : chunkLimit(chunkLimit),
                                                                                                  renderDistance(renderDistance),
@@ -21,10 +21,10 @@ pf::mc::ChunkManager::~ChunkManager() {
 void pf::mc::ChunkManager::resetWithSeed(double seed) {
   chunks.writeAccess()->clear();
   emptyChunks.writeAccess()->clear();
-  //hiddenModifiedChunks.clear();
   hiddenChunkChanges.clear();
   ChunkManager::seed = seed;
   noiseGenerator.setSeed(seed);
+  isFirstGen = true;
 }
 
 void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
@@ -36,12 +36,6 @@ void pf::mc::ChunkManager::generateChunks(glm::vec3 cameraPosition) {
     if (std::ranges::find(*emptyChunksAccess, position) != std::ranges::end(*emptyChunksAccess)) {
       continue;
     }
-    /*if (auto iter = std::ranges::find_if(hiddenModifiedChunks, [position](const auto &chunk) { return chunk->getPosition() == position; });
-        iter != hiddenModifiedChunks.end()) {
-      chunks.writeAccess()->emplace_back(std::move(*iter));
-      hiddenModifiedChunks.erase(iter);
-      continue;
-    }*/
     if (auto iter = std::ranges::find_if(hiddenChunkChanges, [position](const auto &change) { return change.position == position; });
         iter != hiddenChunkChanges.end()) {
       auto newChunk = std::make_unique<Chunk>(position, noiseGenerator);
@@ -118,7 +112,6 @@ void pf::mc::ChunkManager::unloadDistantChunks(glm::vec3 cameraPosition) {
   for (auto &chunk : *chunksAccess) {
     if (shouldUnload(chunk) && chunk->isModified()) {
       hiddenChunkChanges.emplace_back(chunk->getPosition(), chunk->getChanges());
-      //hiddenModifiedChunks.emplace_back(std::move(chunk));
     }
   }
   auto toRemove = std::ranges::remove_if(*chunksAccess, [&](const auto &chunk) {
@@ -135,9 +128,10 @@ double pf::mc::ChunkManager::getSeed() const {
   return seed;
 }
 
-// TODO: load only chunks on edges
-std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 cameraPosition) const {
+std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 cameraPosition) {
   std::vector<glm::ivec3> result{};
+  previousPosition = cameraPosition;
+
   auto min = glm::ivec3{cameraPosition - static_cast<float>(renderDistance)};
   min -= min % static_cast<int>(CHUNK_LEN);
   auto max = glm::ivec3{cameraPosition + static_cast<float>(renderDistance)};
@@ -154,12 +148,7 @@ std::vector<glm::ivec3> pf::mc::ChunkManager::getAllChunksToGenerate(glm::vec3 c
   }
   result.erase(
       std::ranges::begin(std::ranges::remove_if(result, [this](const auto &pos) {
-        for (const auto &chunk : *chunks.readOnlyAccess()) {
-          if (chunk->getPosition() == pos) {
-            return true;
-          }
-        }
-        return false;
+        return std::ranges::any_of(*chunks.readOnlyAccess(), [pos](const auto &chunk) { return chunk->getPosition() == pos; });
       })),
       std::ranges::end(result));
   std::ranges::sort(result, [cameraPosition](const auto &lhs, const auto &rhs) {
