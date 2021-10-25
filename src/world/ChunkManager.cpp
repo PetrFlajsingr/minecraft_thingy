@@ -169,7 +169,7 @@ pf::mc::Chunk *pf::mc::ChunkManager::chunkForCoords(glm::ivec3 coords) const {
 }
 
 std::optional<pf::mc::ChunkManager::RayCastResult> pf::mc::ChunkManager::castRay(glm::vec3 position, glm::vec3 direction, double maxDistance) const {
-  constexpr auto RAY_STEP = 0.01f;
+  constexpr auto RAY_STEP = 0.03f;
   RayCastResult result{};
   glm::ivec3 rayPosition = position;
   glm::ivec3 previousPosition{};
