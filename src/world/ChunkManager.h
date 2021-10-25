@@ -1,6 +1,9 @@
-//
-// Created by xflajs00 on 23.10.2021.
-//
+/**
+* @file ChunkManager.h
+* @brief Management of chunks. Chunks are loaded in threadpool.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 
 #ifndef MINECRAFT_THINGY_SRC_WORLD_CHUNKMANAGER_H
 #define MINECRAFT_THINGY_SRC_WORLD_CHUNKMANAGER_H

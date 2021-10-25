@@ -1,7 +1,9 @@
-//
-// Created by xflajs00 on 22.10.2021.
-//
-
+/**
+* @file files.h
+* @brief File loading/saving utils.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 #ifndef OPENGL_TEMPLATE_SRC_UTILS_FILES_H
 #define OPENGL_TEMPLATE_SRC_UTILS_FILES_H
 

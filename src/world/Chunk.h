@@ -1,6 +1,10 @@
-//
-// Created by xflajs00 on 23.10.2021.
-//
+/**
+* @file Chunk.h
+* @brief A chunk of game's terrain.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
+
 
 #ifndef OPENGL_TEMPLATE_SRC_WORLD_CHUNK_H
 #define OPENGL_TEMPLATE_SRC_WORLD_CHUNK_H
@@ -18,7 +22,7 @@
 
 namespace pf::mc {
 
-
+/** length of chunk edge */
 constexpr static std::size_t CHUNK_LEN = 16;
 constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 

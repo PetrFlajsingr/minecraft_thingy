@@ -1,6 +1,9 @@
-//
-// Created by xflajs00 on 22.10.2021.
-//
+/**
+* @file Window.h
+* @brief Window taking care of user events and main loop.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 
 #ifndef OPENGL_TEMPLATE_SRC_UI_WINDOW_H
 #define OPENGL_TEMPLATE_SRC_UI_WINDOW_H

@@ -1,7 +1,9 @@
-//
-// Created by xflajs00 on 23.10.2021.
-//
-
+/**
+* @file UI.h
+* @brief Application's UI elements.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 #ifndef MINECRAFT_THINGY_SRC_UI_UI_H
 #define MINECRAFT_THINGY_SRC_UI_UI_H
 

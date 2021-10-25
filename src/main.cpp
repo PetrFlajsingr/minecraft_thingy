@@ -1,3 +1,9 @@
+/**
+* @file main.cpp
+* @brief Messy main file. UI events are registered here.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 #include "renderers/MinecraftThingyRenderer.h"
 #include "ui/UI.h"
 #include "utils/FPSCounter.h"

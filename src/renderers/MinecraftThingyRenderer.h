@@ -1,6 +1,9 @@
-//
-// Created by xflajs00 on 23.10.2021.
-//
+/**
+* @file MinecraftThingyRenderer.h
+* @brief Main class of the app logic.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 
 #ifndef OPENGL_TEMPLATE_SRC_RENDERERS_MINECRAFTTHINGYRENDERER_H
 #define OPENGL_TEMPLATE_SRC_RENDERERS_MINECRAFTTHINGYRENDERER_H

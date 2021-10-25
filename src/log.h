@@ -1,6 +1,9 @@
-//
-// Created by xflajs00 on 23.10.2021.
-//
+/**
+* @file log.h
+* @brief Simple global logging function.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 
 #ifndef MINECRAFT_THINGY_SRC_LOG_H
 #define MINECRAFT_THINGY_SRC_LOG_H

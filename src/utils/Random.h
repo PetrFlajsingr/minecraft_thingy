@@ -1,6 +1,9 @@
-//
-// Created by xflajs00 on 24.10.2021.
-//
+/**
+* @file Random.h
+* @brief Randomness utils.
+* @author Petr Flajšingr
+* @date 25.10.2021
+*/
 
 #ifndef MINECRAFT_THINGY_SRC_UTILS_RANDOM_H
 #define MINECRAFT_THINGY_SRC_UTILS_RANDOM_H
