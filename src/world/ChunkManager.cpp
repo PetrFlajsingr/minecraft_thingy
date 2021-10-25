@@ -11,7 +11,7 @@
 pf::mc::ChunkManager::ChunkManager(std::size_t chunkLimit, double renderDistance, double seed) : chunkLimit(chunkLimit),
                                                                                                  renderDistance(renderDistance),
                                                                                                  seed(seed),
-                                                                                                 noiseGenerator(seed) {
+                                                                                                 noiseGenerator(std::make_shared<PerlinNoiseGenerator>(seed)) {
 }
 
 pf::mc::ChunkManager::~ChunkManager() {
@@ -23,7 +23,7 @@ void pf::mc::ChunkManager::resetWithSeed(double seed) {
   emptyChunks.writeAccess()->clear();
   hiddenChunkChanges.clear();
   ChunkManager::seed = seed;
-  noiseGenerator.setSeed(seed);
+  noiseGenerator->setSeed(seed);
   isFirstGen = true;
 }
 

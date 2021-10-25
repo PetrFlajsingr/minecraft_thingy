@@ -51,7 +51,6 @@ class ChunkManager {
 
   Safe<std::vector<std::unique_ptr<Chunk>>> chunks;
 
-  //std::vector<std::unique_ptr<Chunk>> hiddenModifiedChunks;
   struct ChunkChangeData {
     ChunkChangeData(const glm::ivec3 &position, Chunk::ChangeStorage changes);
     glm::ivec3 position;
@@ -63,7 +62,7 @@ class ChunkManager {
   std::size_t chunkLimit;
   double renderDistance;
   double seed;
-  PerlinNoiseGenerator noiseGenerator;
+  std::shared_ptr<NoiseGenerator> noiseGenerator;
 
   ThreadPool loadingThreadPool{4};
 

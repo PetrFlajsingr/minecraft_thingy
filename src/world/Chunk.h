@@ -18,14 +18,14 @@
 namespace pf::mc {
 
 
-constexpr static std::size_t CHUNK_LEN = 32;
+constexpr static std::size_t CHUNK_LEN = 16;
 constexpr static std::size_t CHUNK_SIZE = CHUNK_LEN * CHUNK_LEN * CHUNK_LEN;
 
 class Chunk {
  public:
   using ChangeStorage = std::unordered_map<LowResPoint, Voxel::Type>;
-  Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator);
-  Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data);
+  Chunk(glm::ivec3 position, std::shared_ptr<NoiseGenerator> noiseGenerator);
+  Chunk(std::shared_ptr<NoiseGenerator> noiseGenerator, std::span<const std::byte> data);
 
   void setChanged();
 
@@ -54,7 +54,9 @@ class Chunk {
   void setChanges(const std::unordered_map<LowResPoint, Voxel::Type> &changes);
 
  private:
-  void generateVoxelData(const NoiseGenerator &noiseGenerator);
+  void generateVoxelData();
+  std::shared_ptr<NoiseGenerator> noiseGenerator;
+  bool voxelDataGenerated = false;
 
   [[nodiscard]] static std::size_t index3Dto1D(std::size_t x, std::size_t y, std::size_t z);
 

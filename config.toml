@@ -3,7 +3,7 @@ position = [ 0.0, 40.0, 0.0 ]
 
 [chunks]
 max_limit = 32
-render_distance = 30
+render_distance = 40
 
 [files]
 resources_path = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources'
@@ -15,9 +15,10 @@ path_icons = 'C:\Users\xflajs00\CLionProjects\minecraft_thingy\resources\icons'
 collapsed = false
 
 [imgui.clip_checkbox]
-checked = true
+checked = false
 
 [imgui.combobox_vox_type]
+selected = 'Ice'
 
 [imgui.frustum_culling_checkbox]
 checked = false
@@ -30,5 +31,5 @@ checked = false
 
 [window]
 height = 1200
-title = 'OpenGL'
+title = 'Minecraft thingy'
 width = 1800

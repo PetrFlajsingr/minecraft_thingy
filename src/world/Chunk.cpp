@@ -4,25 +4,25 @@
 
 #include "Chunk.h"
 #include <fmt/core.h>
-#include <pf_common/bin.h>
 #include <log.h>
+#include <pf_common/bin.h>
 
-pf::mc::Chunk::Chunk(glm::ivec3 position, const NoiseGenerator &noiseGenerator) : changed(true),
-                                                                                 vbo(std::make_shared<Buffer>()),
-                                                                                 nbo(std::make_shared<Buffer>()),
-                                                                                 vao(std::make_shared<VertexArray>()),
-                                                                                 position(position),
-                                                                                 center(glm::vec3{position} + CHUNK_LEN / 2.0f) {
-  generateVoxelData(noiseGenerator);
+pf::mc::Chunk::Chunk(glm::ivec3 position, std::shared_ptr<NoiseGenerator> noiseGenerator) : noiseGenerator(noiseGenerator),
+                                                                                            changed(true),
+                                                                                            vbo(std::make_shared<Buffer>()),
+                                                                                            nbo(std::make_shared<Buffer>()),
+                                                                                            vao(std::make_shared<VertexArray>()),
+                                                                                            position(position),
+                                                                                            center(glm::vec3{position} + CHUNK_LEN / 2.0f) {
 }
 
-pf::mc::Chunk::Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::byte> data) : changed(true),
-                                                           vbo(std::make_shared<Buffer>()),
-                                                           nbo(std::make_shared<Buffer>()),
-                                                           vao(std::make_shared<VertexArray>()) {
+pf::mc::Chunk::Chunk(std::shared_ptr<NoiseGenerator> noiseGenerator, std::span<const std::byte> data) : changed(true),
+                                                                                                        vbo(std::make_shared<Buffer>()),
+                                                                                                        nbo(std::make_shared<Buffer>()),
+                                                                                                        vao(std::make_shared<VertexArray>()) {
   const auto dataSize = fromBytes<std::size_t>(std::span{data.begin(), data.begin() + sizeof(std::size_t)});
   const auto dataSizeSize = sizeof(std::size_t);
-  constexpr auto positionSize =  sizeof(decltype(position));
+  constexpr auto positionSize = sizeof(decltype(position));
   position = fromBytes<decltype(position)>(std::span{data.begin() + dataSizeSize, data.begin() + dataSizeSize + positionSize});
 
   center = glm::vec3{position} + CHUNK_LEN / 2.0f;
@@ -36,7 +36,7 @@ pf::mc::Chunk::Chunk(const NoiseGenerator &noiseGenerator, std::span<const std::
     newChanges[pos] = type;
   }
 
-  generateVoxelData(noiseGenerator);
+  generateVoxelData();
 
   setChanges(newChanges);
 }
@@ -64,6 +64,7 @@ void pf::mc::Chunk::createMesh() {
   if (geometryGenerated) {
     return;
   }
+  generateVoxelData();
   geometryGenerated = true;
   //log("updating chunk at {}x{}x{}", position.x, position.y, position.z); FIXME need to sync log with main thread
 
@@ -71,7 +72,6 @@ void pf::mc::Chunk::createMesh() {
   vertexCount = mesh.vertices.size();
   //log("generated {} vertices", vertexCount); FIXME need to sync log with main thread
 }
-
 
 void pf::mc::Chunk::render() {
   update();
@@ -102,13 +102,17 @@ void pf::mc::Chunk::setVoxel(glm::ivec3 coords, pf::mc::Voxel::Type type) {
   changes[LowResPoint{coords.x, coords.y, coords.z}] = type;
 }
 
-void pf::mc::Chunk::generateVoxelData(const pf::mc::NoiseGenerator &noiseGenerator) {
+void pf::mc::Chunk::generateVoxelData() {
+  if (voxelDataGenerated) {
+    return;
+  }
+  voxelDataGenerated = true;
   constexpr auto HEIGHT_ICE = 30;
   for (std::size_t x = 0; x < CHUNK_LEN; ++x) {
     for (std::size_t y = 0; y < CHUNK_LEN; ++y) {
       for (std::size_t z = 0; z < CHUNK_LEN; ++z) {
         const auto index = index3Dto1D(x, y, z);
-        const auto noiseValue = noiseGenerator.noise(glm::vec3{position} + glm::vec3{x, y, z});
+        const auto noiseValue = noiseGenerator->noise(glm::vec3{position} + glm::vec3{x, y, z});
         if (noiseValue < 0.0) {
           voxels[index].type = Voxel::Type::Empty;
         } else if (noiseValue > 14.0) {
