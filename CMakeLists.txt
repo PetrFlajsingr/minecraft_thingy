@@ -34,6 +34,10 @@ include_directories(include)
 include_directories(src)
 include_directories(include/stb)
 
+
+
+set(GLFW3_DIR ${PROJECT_SOURCE_DIR}/GLFW)
+
 find_package(GLFW3 REQUIRED)
 
 CPMAddPackage(
@@ -45,11 +49,9 @@ CPMAddPackage(
 CPMAddPackage(
         NAME pf_imgui
         GITHUB_REPOSITORY PetrFlajsingr/pf_imgui
-        GIT_TAG v6.0.2b
+        GIT_TAG v0.6.2b
 )
 
-
-set(GLFW3_DIR ${PROJECT_SOURCE_DIR}/GLFW)
 
 #add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 hunter_add_package(nlohmann_json)
